@@ -3,11 +3,10 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"time"
+	"errors"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
-	"github.com/grafana/grafana-plugin-sdk-go/data"
 )
 
 type queryModel struct {
@@ -35,17 +34,12 @@ func (td *todosBkdnDatasource) query(ctx context.Context, query backend.DataQuer
 	if response.Error != nil {
 		return response
 	}
-
-	var timeslices []time.Time
-	var valueslices []int64
-	for i := 0; i < int(qm.Constant); i++ {
-		timeslices = append(timeslices, query.TimeRange.From)
-		valueslices = append(valueslices, int64(i))
+	dataFrame, err := getDummyData(int(qm.Constant), qm.QueryText)
+	if err != nil {
+		response.Error = errors.New("Error parsing dataframes")
+		return response
 	}
-	frame := data.NewFrame("response")
-	frame.Fields = append(frame.Fields, data.NewField("time", nil, timeslices))
-	frame.Fields = append(frame.Fields, data.NewField(qm.QueryText, nil, valueslices))
-	response.Frames = append(response.Frames, frame)
+	response.Frames = append(response.Frames, &dataFrame)
 	return response
 }
 
