@@ -34,12 +34,18 @@ func (td *todosBkdnDatasource) query(ctx context.Context, query backend.DataQuer
 	if response.Error != nil {
 		return response
 	}
-	dataFrame, err := getDummyData(int(qm.Constant), qm.QueryText)
+	dataFrameDummy, err := getDummyData(int(qm.Constant), qm.QueryText)
 	if err != nil {
 		response.Error = errors.New("Error parsing dataframes")
 		return response
 	}
-	response.Frames = append(response.Frames, &dataFrame)
+	response.Frames = append(response.Frames, &dataFrameDummy)
+	dataFrameTodos, err := getTodos()
+	if err != nil {
+		response.Error = errors.New("Error parsing dataframes")
+		return response
+	}
+	response.Frames = append(response.Frames, &dataFrameTodos)
 	return response
 }
 

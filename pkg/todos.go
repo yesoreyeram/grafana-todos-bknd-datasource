@@ -1,8 +1,13 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"strconv"
 	"time"
 
+	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
 )
 
@@ -15,9 +20,42 @@ func getDummyData(constant int, queryText string) (data.Frame, error) {
 		stringslices = append(stringslices, "hello")
 		valueslices = append(valueslices, int64(i+1))
 	}
-	frame := data.NewFrame("response")
+	frame := data.NewFrame("Dummy Data")
 	frame.Fields = append(frame.Fields, data.NewField("Time", nil, timeslices))
 	frame.Fields = append(frame.Fields, data.NewField("Strings", nil, stringslices))
 	frame.Fields = append(frame.Fields, data.NewField(queryText, nil, valueslices))
+	return *frame, nil
+}
+
+type todoItem struct {
+	ID        int64  `json:"id"`
+	Title     string `json:"title"`
+	Completed bool   `json:"completed"`
+}
+
+func getTodos() (data.Frame, error) {
+	TodoURL := fmt.Sprintf("%s/%s", "https://jsonplaceholder.typicode.com", "todos")
+	res, err := http.Get(TodoURL)
+	if err != nil {
+		log.DefaultLogger.Warn("Error getting data from jsonplaceholder")
+	}
+	defer res.Body.Close()
+	var todos []todoItem
+	err = json.NewDecoder(res.Body).Decode(&todos)
+	if err != nil {
+		log.DefaultLogger.Warn("Error parsing data from jsonplaceholder")
+	}
+	var todoIDs []int64
+	var todoTitles []string
+	var todoStatuses []string
+	for _, todoitem := range todos {
+		todoIDs = append(todoIDs, todoitem.ID)
+		todoTitles = append(todoTitles, todoitem.Title)
+		todoStatuses = append(todoStatuses, strconv.FormatBool(todoitem.Completed))
+	}
+	frame := data.NewFrame("Todos")
+	frame.Fields = append(frame.Fields, data.NewField("ID", nil, todoIDs))
+	frame.Fields = append(frame.Fields, data.NewField("Title", nil, todoTitles))
+	frame.Fields = append(frame.Fields, data.NewField("Status", nil, todoStatuses))
 	return *frame, nil
 }
