@@ -9,13 +9,17 @@ import (
 
 func main() {
 	logger := log.New()
-	dummyserver := &dummyServer{
+	dummyds := &dummyDatasource{
+		logger: logger,
+	}
+	todods := &todoDatasource{
 		logger: logger,
 	}
 	ds := &dataSource{
-		im:          datasource.NewInstanceManager(newDataSourceInstance),
-		logger:      logger,
-		dummyserver: *dummyserver,
+		im:              datasource.NewInstanceManager(newDataSourceInstance),
+		logger:          logger,
+		dummyDatasource: *dummyds,
+		todoDatasource:  *todods,
 	}
 	err := datasource.Serve(datasource.ServeOpts{
 		QueryDataHandler:   ds,

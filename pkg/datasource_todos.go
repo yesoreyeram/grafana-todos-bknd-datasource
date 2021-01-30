@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
@@ -17,27 +16,11 @@ type todoItem struct {
 	Completed bool   `json:"completed"`
 }
 
-type dummyServer struct {
+type todoDatasource struct {
 	logger log.Logger
 }
 
-func (td *dummyServer) getDummyData(constant int, queryText string) (data.Frame, error) {
-	var timeslices []time.Time
-	var valueslices []int64
-	var stringslices []string
-	for i := 0; i < int(constant); i++ {
-		timeslices = append(timeslices, time.Now())
-		stringslices = append(stringslices, "hello")
-		valueslices = append(valueslices, int64(i+1))
-	}
-	frame := data.NewFrame("Dummy Data")
-	frame.Fields = append(frame.Fields, data.NewField("Time", nil, timeslices))
-	frame.Fields = append(frame.Fields, data.NewField("Strings", nil, stringslices))
-	frame.Fields = append(frame.Fields, data.NewField(queryText, nil, valueslices))
-	return *frame, nil
-}
-
-func (td *dummyServer) getTodos() (data.Frame, error) {
+func (td *todoDatasource) Query() (data.Frame, error) {
 	TodoURL := fmt.Sprintf("%s/%s", "https://jsonplaceholder.typicode.com", "todos")
 	res, err := http.Get(TodoURL)
 	if err != nil {

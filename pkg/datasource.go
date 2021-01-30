@@ -17,9 +17,10 @@ type queryModel struct {
 }
 
 type dataSource struct {
-	im          instancemgmt.InstanceManager
-	dummyserver dummyServer
-	logger      log.Logger
+	im              instancemgmt.InstanceManager
+	logger          log.Logger
+	dummyDatasource dummyDatasource
+	todoDatasource  todoDatasource
 }
 
 func (td *dataSource) QueryData(ctx context.Context, req *backend.QueryDataRequest) (*backend.QueryDataResponse, error) {
@@ -39,13 +40,13 @@ func (td *dataSource) query(ctx context.Context, query backend.DataQuery) backen
 	if response.Error != nil {
 		return response
 	}
-	dataFrameDummy, err := td.dummyserver.getDummyData(int(qm.Constant), qm.QueryText)
+	dataFrameDummy, err := td.dummyDatasource.Query(int(qm.Constant), qm.QueryText)
 	if err != nil {
 		response.Error = errors.New("Error parsing dataframes")
 		return response
 	}
 	response.Frames = append(response.Frames, &dataFrameDummy)
-	dataFrameTodos, err := td.dummyserver.getTodos()
+	dataFrameTodos, err := td.todoDatasource.Query()
 	if err != nil {
 		response.Error = errors.New("Error parsing dataframes")
 		return response

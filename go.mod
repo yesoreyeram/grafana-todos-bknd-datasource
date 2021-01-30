@@ -1,4 +1,4 @@
-module github.com/grafana/simple-datasource-backend
+module github.com/yesoreyeram/grafana-todos-bknd-datasource
 
 go 1.14
 
