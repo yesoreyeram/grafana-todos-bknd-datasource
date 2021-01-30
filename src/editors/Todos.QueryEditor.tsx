@@ -19,7 +19,7 @@ export const TodosEditor: React.FC<TodoEditorProps> = props => {
   };
 
   const onNumberofTodosChange = (event: ChangeEvent<HTMLInputElement>) => {
-    onChange({ ...query, numberOfTodos: parseInt(event.target.value) });
+    onChange({ ...query, numberOfTodos: parseInt(event.target.value, 10) });
     onRunQuery();
   };
 

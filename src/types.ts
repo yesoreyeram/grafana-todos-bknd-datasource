@@ -4,6 +4,7 @@ export enum EntityType {
   Dummy = 'dummy',
   Todos = 'todos',
   JSONPlaceholder = 'jsonplaceholder',
+  JSON = 'json',
 }
 export enum JSONPlaceholderEntity {
   Todos = 'todos',
@@ -21,6 +22,7 @@ export interface MyQuery extends DataQuery {
   numberOfTodos?: number;
   hideFinishedTodos?: boolean;
   jsonPlaceholderEntity?: JSONPlaceholderEntity;
+  jsonURL?: string;
 }
 
 export const defaultQuery: Partial<MyQuery> = {

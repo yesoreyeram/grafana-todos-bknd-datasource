@@ -18,11 +18,13 @@ type queryModel struct {
 	NumberOfTodos         int     `json:"numberOfTodos"`
 	HideFinishedTodos     bool    `json:"hideFinishedTodos"`
 	JSONPlaceholderEntity string  `json:"jsonPlaceholderEntity"`
+	JSONURL               string  `json:"jsonURL"`
 }
 
 type dataSource struct {
 	im                        instancemgmt.InstanceManager
 	logger                    log.Logger
+	jsonDatasource            jsonDatasource
 	jsonplaceholderDatasource jsonPlaceholderDatasource
 	dummyDatasource           dummyDatasource
 	todoDatasource            todoDatasource
@@ -67,6 +69,13 @@ func (td *dataSource) query(ctx context.Context, query backend.DataQuery) backen
 			return response
 		}
 		response.Frames = append(response.Frames, &dataFrameJSONPlaceholders)
+	case "json":
+		dataFrameJSON, err := td.jsonDatasource.Query(qm.JSONURL)
+		if err != nil {
+			response.Error = errors.New("Error parsing dataframes")
+			return response
+		}
+		response.Frames = append(response.Frames, &dataFrameJSON)
 	}
 	return response
 }

@@ -18,10 +18,14 @@ func main() {
 	jsonplaceholderds := &jsonPlaceholderDatasource{
 		logger: logger,
 	}
+	jsonds := &jsonDatasource{
+		logger: logger,
+	}
 	ds := &dataSource{
 		im:                        datasource.NewInstanceManager(newDataSourceInstance),
 		logger:                    logger,
 		jsonplaceholderDatasource: *jsonplaceholderds,
+		jsonDatasource:            *jsonds,
 		dummyDatasource:           *dummyds,
 		todoDatasource:            *todods,
 	}

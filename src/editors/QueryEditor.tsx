@@ -8,11 +8,13 @@ import { defaultQuery, MyDataSourceOptions, MyQuery, EntityType } from '../types
 import { DummyEditor } from './Dummy.QueryEditor';
 import { TodosEditor } from './Todos.QueryEditor';
 import { JSONPlaceholderEditor } from './JSONPlaceholder.QueryEditor';
+import { JSONQueryEditor } from './JSON.QueryEditor';
 
 const EntityTypes = [
   { label: 'Dummy', value: EntityType.Dummy },
   { label: 'Todos', value: EntityType.Todos },
   { label: 'JSON Placeholder', value: EntityType.JSONPlaceholder },
+  { label: 'JSON', value: EntityType.JSON },
 ];
 
 type Props = QueryEditorProps<DataSource, MyQuery, MyDataSourceOptions>;
@@ -45,6 +47,9 @@ export const QueryEditor: React.FC<Props> = props => {
         )}
         {query.entityType === EntityType.JSONPlaceholder && (
           <JSONPlaceholderEditor query={query} onChange={onChange} onRunQuery={onRunQuery}></JSONPlaceholderEditor>
+        )}
+        {query.entityType === EntityType.JSON && (
+          <JSONQueryEditor query={query} onChange={onChange} onRunQuery={onRunQuery}></JSONQueryEditor>
         )}
       </div>
     </div>
