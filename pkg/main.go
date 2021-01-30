@@ -15,11 +15,15 @@ func main() {
 	todods := &todoDatasource{
 		logger: logger,
 	}
+	jsonplaceholderds := &jsonPlaceholderDatasource{
+		logger: logger,
+	}
 	ds := &dataSource{
-		im:              datasource.NewInstanceManager(newDataSourceInstance),
-		logger:          logger,
-		dummyDatasource: *dummyds,
-		todoDatasource:  *todods,
+		im:                        datasource.NewInstanceManager(newDataSourceInstance),
+		logger:                    logger,
+		jsonplaceholderDatasource: *jsonplaceholderds,
+		dummyDatasource:           *dummyds,
+		todoDatasource:            *todods,
 	}
 	err := datasource.Serve(datasource.ServeOpts{
 		QueryDataHandler:   ds,

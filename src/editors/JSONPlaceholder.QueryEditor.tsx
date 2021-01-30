@@ -11,6 +11,10 @@ interface JSONPlaceholderEditorProps {
 const JsonPlaceHolderEntities = [
   { label: 'Todos', value: JSONPlaceholderEntity.Todos },
   { label: 'Users', value: JSONPlaceholderEntity.Users },
+  { label: 'Posts', value: JSONPlaceholderEntity.Posts },
+  { label: 'Comments', value: JSONPlaceholderEntity.Comments },
+  { label: 'Albumns', value: JSONPlaceholderEntity.Albums },
+  { label: 'Photos', value: JSONPlaceholderEntity.Photos },
 ];
 
 export const JSONPlaceholderEditor: React.FC<JSONPlaceholderEditorProps> = props => {

@@ -12,18 +12,20 @@ import (
 )
 
 type queryModel struct {
-	EntityType        string  `json:"entityType"`
-	Constant          float64 `json:"constant"`
-	QueryText         string  `json:"queryText"`
-	NumberOfTodos     int     `json:"numberOfTodos"`
-	HideFinishedTodos bool    `json:"hideFinishedTodos"`
+	EntityType            string  `json:"entityType"`
+	Constant              float64 `json:"constant"`
+	QueryText             string  `json:"queryText"`
+	NumberOfTodos         int     `json:"numberOfTodos"`
+	HideFinishedTodos     bool    `json:"hideFinishedTodos"`
+	JSONPlaceholderEntity string  `json:"jsonPlaceholderEntity"`
 }
 
 type dataSource struct {
-	im              instancemgmt.InstanceManager
-	logger          log.Logger
-	dummyDatasource dummyDatasource
-	todoDatasource  todoDatasource
+	im                        instancemgmt.InstanceManager
+	logger                    log.Logger
+	jsonplaceholderDatasource jsonPlaceholderDatasource
+	dummyDatasource           dummyDatasource
+	todoDatasource            todoDatasource
 }
 
 func (td *dataSource) QueryData(ctx context.Context, req *backend.QueryDataRequest) (*backend.QueryDataResponse, error) {
@@ -58,6 +60,13 @@ func (td *dataSource) query(ctx context.Context, query backend.DataQuery) backen
 			return response
 		}
 		response.Frames = append(response.Frames, &dataFrameTodos)
+	case "jsonplaceholder":
+		dataFrameJSONPlaceholders, err := td.jsonplaceholderDatasource.Query(qm.JSONPlaceholderEntity)
+		if err != nil {
+			response.Error = errors.New("Error parsing dataframes")
+			return response
+		}
+		response.Frames = append(response.Frames, &dataFrameJSONPlaceholders)
 	}
 	return response
 }

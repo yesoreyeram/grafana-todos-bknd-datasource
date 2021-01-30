@@ -8,6 +8,10 @@ export enum EntityType {
 export enum JSONPlaceholderEntity {
   Todos = 'todos',
   Users = 'users',
+  Posts = 'posts',
+  Comments = 'comments',
+  Albums = 'albums',
+  Photos = 'photos',
 }
 
 export interface MyQuery extends DataQuery {
