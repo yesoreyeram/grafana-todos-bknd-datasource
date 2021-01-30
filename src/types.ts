@@ -1,24 +1,24 @@
 import { DataQuery, DataSourceJsonData } from '@grafana/data';
 
+export enum EntitiyType {
+  Dummy = 'dummy',
+  Todos = 'todos',
+}
+
 export interface MyQuery extends DataQuery {
+  entityType: EntitiyType;
   queryText?: string;
-  constant: number;
+  constant?: number;
 }
 
 export const defaultQuery: Partial<MyQuery> = {
-  constant: 6.5,
+  entityType: EntitiyType.Dummy,
 };
 
-/**
- * These are options configured for each DataSource instance
- */
 export interface MyDataSourceOptions extends DataSourceJsonData {
   path?: string;
 }
 
-/**
- * Value that is used in the backend, but never sent over HTTP to the frontend
- */
 export interface MySecureJsonData {
   apiKey?: string;
 }

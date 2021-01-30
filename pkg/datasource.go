@@ -12,8 +12,9 @@ import (
 )
 
 type queryModel struct {
-	Constant  float64 `json:"constant"`
-	QueryText string  `json:"queryText"`
+	EntityType string  `json:"entityType"`
+	Constant   float64 `json:"constant"`
+	QueryText  string  `json:"queryText"`
 }
 
 type dataSource struct {
@@ -40,18 +41,22 @@ func (td *dataSource) query(ctx context.Context, query backend.DataQuery) backen
 	if response.Error != nil {
 		return response
 	}
-	dataFrameDummy, err := td.dummyDatasource.Query(int(qm.Constant), qm.QueryText)
-	if err != nil {
-		response.Error = errors.New("Error parsing dataframes")
-		return response
+	switch qm.EntityType {
+	case "dummy":
+		dataFrameDummy, err := td.dummyDatasource.Query(int(qm.Constant), qm.QueryText)
+		if err != nil {
+			response.Error = errors.New("Error parsing dataframes")
+			return response
+		}
+		response.Frames = append(response.Frames, &dataFrameDummy)
+	case "todos":
+		dataFrameTodos, err := td.todoDatasource.Query()
+		if err != nil {
+			response.Error = errors.New("Error parsing dataframes")
+			return response
+		}
+		response.Frames = append(response.Frames, &dataFrameTodos)
 	}
-	response.Frames = append(response.Frames, &dataFrameDummy)
-	dataFrameTodos, err := td.todoDatasource.Query()
-	if err != nil {
-		response.Error = errors.New("Error parsing dataframes")
-		return response
-	}
-	response.Frames = append(response.Frames, &dataFrameTodos)
 	return response
 }
 

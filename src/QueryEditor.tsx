@@ -1,50 +1,83 @@
 import defaults from 'lodash/defaults';
 
-import React, { ChangeEvent, PureComponent } from 'react';
-import { LegacyForms } from '@grafana/ui';
+import React, { ChangeEvent } from 'react';
+import { LegacyForms, Select } from '@grafana/ui';
 import { QueryEditorProps } from '@grafana/data';
 import { DataSource } from './DataSource';
-import { defaultQuery, MyDataSourceOptions, MyQuery } from './types';
+import { defaultQuery, MyDataSourceOptions, MyQuery, EntitiyType } from './types';
 
 const { FormField } = LegacyForms;
 
+const EntityTypes = [
+  { label: 'Dummy', value: EntitiyType.Dummy },
+  { label: 'Todos', value: EntitiyType.Todos },
+];
+
 type Props = QueryEditorProps<DataSource, MyQuery, MyDataSourceOptions>;
 
-export class QueryEditor extends PureComponent<Props> {
-  onQueryTextChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const { onChange, query } = this.props;
-    onChange({ ...query, queryText: event.target.value });
-  };
+interface DummyProps {
+  query: MyQuery;
+  onChange: (value: MyQuery) => void;
+  onRunQuery: () => void;
+}
 
-  onConstantChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const { onChange, query, onRunQuery } = this.props;
-    onChange({ ...query, constant: parseFloat(event.target.value) });
-    // executes the query
+const DummyEditor: React.FC<DummyProps> = props => {
+  let { onChange, query, onRunQuery } = props;
+
+  const onQueryTextChange = (event: ChangeEvent<HTMLInputElement>) => {
+    onChange({ ...query, queryText: event.target.value });
     onRunQuery();
   };
 
-  render() {
-    const query = defaults(this.props.query, defaultQuery);
-    const { queryText, constant } = query;
+  const onConstantChange = (event: ChangeEvent<HTMLInputElement>) => {
+    onChange({ ...query, constant: parseFloat(event.target.value) });
+    onRunQuery();
+  };
 
-    return (
+  return (
+    <>
+      <FormField
+        width={4}
+        value={props.query.constant}
+        onChange={onConstantChange}
+        label="Constant"
+        type="number"
+        step="0.1"
+      />
+      <FormField
+        labelWidth={8}
+        value={props.query.queryText}
+        onChange={onQueryTextChange}
+        label="Query Text"
+        tooltip="Not used yet"
+      />
+    </>
+  );
+};
+
+export const QueryEditor: React.FC<Props> = props => {
+  let { query, onChange, onRunQuery } = props;
+
+  query = defaults(query, defaultQuery);
+
+  const onEntityTypeChange = (newEntity: EntitiyType) => {
+    onChange({ ...query, entityType: newEntity });
+    onRunQuery();
+  };
+
+  return (
+    <div className="gf-form-inline">
       <div className="gf-form">
-        <FormField
-          width={4}
-          value={constant}
-          onChange={this.onConstantChange}
-          label="Constant"
-          type="number"
-          step="0.1"
+        <label className="gf-form-label query-keyword width-8">Entity</label>
+        <Select
+          options={EntityTypes}
+          value={query.entityType}
+          onChange={e => onEntityTypeChange(e.value as EntitiyType)}
         />
-        <FormField
-          labelWidth={8}
-          value={queryText || ''}
-          onChange={this.onQueryTextChange}
-          label="Query Text"
-          tooltip="Not used yet"
-        />
+        {query.entityType === EntitiyType.Dummy && (
+          <DummyEditor query={query} onChange={onChange} onRunQuery={onRunQuery}></DummyEditor>
+        )}
       </div>
-    );
-  }
-}
+    </div>
+  );
+};
