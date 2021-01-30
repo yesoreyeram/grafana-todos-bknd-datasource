@@ -8,19 +8,21 @@ import (
 )
 
 func main() {
-	err := datasource.Serve(newDatasource())
-	if err != nil {
-		log.DefaultLogger.Error(err.Error())
-		os.Exit(1)
+	logger := log.New()
+	dummyserver := &dummyServer{
+		logger: logger,
 	}
-}
-
-func newDatasource() datasource.ServeOpts {
-	ds := &todosBkdnDatasource{
-		im: datasource.NewInstanceManager(newDataSourceInstance),
+	ds := &dataSource{
+		im:          datasource.NewInstanceManager(newDataSourceInstance),
+		logger:      logger,
+		dummyserver: *dummyserver,
 	}
-	return datasource.ServeOpts{
+	err := datasource.Serve(datasource.ServeOpts{
 		QueryDataHandler:   ds,
 		CheckHealthHandler: ds,
+	})
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
 	}
 }

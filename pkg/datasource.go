@@ -4,9 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
+	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 )
 
 type queryModel struct {
@@ -14,11 +16,14 @@ type queryModel struct {
 	QueryText string  `json:"queryText"`
 }
 
-type todosBkdnDatasource struct {
-	im instancemgmt.InstanceManager
+type dataSource struct {
+	im          instancemgmt.InstanceManager
+	dummyserver dummyServer
+	logger      log.Logger
 }
 
-func (td *todosBkdnDatasource) QueryData(ctx context.Context, req *backend.QueryDataRequest) (*backend.QueryDataResponse, error) {
+func (td *dataSource) QueryData(ctx context.Context, req *backend.QueryDataRequest) (*backend.QueryDataResponse, error) {
+	td.logger.Warn(fmt.Sprintf("%v Query(s) Received.", len(req.Queries)))
 	response := backend.NewQueryDataResponse()
 	for _, q := range req.Queries {
 		res := td.query(ctx, q)
@@ -27,20 +32,20 @@ func (td *todosBkdnDatasource) QueryData(ctx context.Context, req *backend.Query
 	return response, nil
 }
 
-func (td *todosBkdnDatasource) query(ctx context.Context, query backend.DataQuery) backend.DataResponse {
+func (td *dataSource) query(ctx context.Context, query backend.DataQuery) backend.DataResponse {
 	var qm queryModel
 	response := backend.DataResponse{}
 	response.Error = json.Unmarshal(query.JSON, &qm)
 	if response.Error != nil {
 		return response
 	}
-	dataFrameDummy, err := getDummyData(int(qm.Constant), qm.QueryText)
+	dataFrameDummy, err := td.dummyserver.getDummyData(int(qm.Constant), qm.QueryText)
 	if err != nil {
 		response.Error = errors.New("Error parsing dataframes")
 		return response
 	}
 	response.Frames = append(response.Frames, &dataFrameDummy)
-	dataFrameTodos, err := getTodos()
+	dataFrameTodos, err := td.dummyserver.getTodos()
 	if err != nil {
 		response.Error = errors.New("Error parsing dataframes")
 		return response
@@ -49,7 +54,7 @@ func (td *todosBkdnDatasource) query(ctx context.Context, query backend.DataQuer
 	return response
 }
 
-func (td *todosBkdnDatasource) CheckHealth(ctx context.Context, req *backend.CheckHealthRequest) (*backend.CheckHealthResult, error) {
+func (td *dataSource) CheckHealth(ctx context.Context, req *backend.CheckHealthRequest) (*backend.CheckHealthResult, error) {
 	return &backend.CheckHealthResult{
 		Status:  backend.HealthStatusOk,
 		Message: "Health status not configured",

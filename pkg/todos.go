@@ -11,7 +11,17 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/data"
 )
 
-func getDummyData(constant int, queryText string) (data.Frame, error) {
+type todoItem struct {
+	ID        int64  `json:"id"`
+	Title     string `json:"title"`
+	Completed bool   `json:"completed"`
+}
+
+type dummyServer struct {
+	logger log.Logger
+}
+
+func (td *dummyServer) getDummyData(constant int, queryText string) (data.Frame, error) {
 	var timeslices []time.Time
 	var valueslices []int64
 	var stringslices []string
@@ -27,23 +37,17 @@ func getDummyData(constant int, queryText string) (data.Frame, error) {
 	return *frame, nil
 }
 
-type todoItem struct {
-	ID        int64  `json:"id"`
-	Title     string `json:"title"`
-	Completed bool   `json:"completed"`
-}
-
-func getTodos() (data.Frame, error) {
+func (td *dummyServer) getTodos() (data.Frame, error) {
 	TodoURL := fmt.Sprintf("%s/%s", "https://jsonplaceholder.typicode.com", "todos")
 	res, err := http.Get(TodoURL)
 	if err != nil {
-		log.DefaultLogger.Warn("Error getting data from jsonplaceholder")
+		td.logger.Warn("Error getting data from jsonplaceholder")
 	}
 	defer res.Body.Close()
 	var todos []todoItem
 	err = json.NewDecoder(res.Body).Decode(&todos)
 	if err != nil {
-		log.DefaultLogger.Warn("Error parsing data from jsonplaceholder")
+		td.logger.Warn("Error parsing data from jsonplaceholder")
 	}
 	var todoIDs []int64
 	var todoTitles []string
