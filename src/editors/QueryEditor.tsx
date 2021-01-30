@@ -4,13 +4,15 @@ import React from 'react';
 import { Select } from '@grafana/ui';
 import { QueryEditorProps } from '@grafana/data';
 import { DataSource } from '../DataSource';
-import { defaultQuery, MyDataSourceOptions, MyQuery, EntitiyType } from '../types';
+import { defaultQuery, MyDataSourceOptions, MyQuery, EntityType } from '../types';
 import { DummyEditor } from './Dummy.QueryEditor';
 import { TodosEditor } from './Todos.QueryEditor';
+import { JSONPlaceholderEditor } from './JSONPlaceholder.QueryEditor';
 
 const EntityTypes = [
-  { label: 'Dummy', value: EntitiyType.Dummy },
-  { label: 'Todos', value: EntitiyType.Todos },
+  { label: 'Dummy', value: EntityType.Dummy },
+  { label: 'Todos', value: EntityType.Todos },
+  { label: 'JSON Placeholder', value: EntityType.JSONPlaceholder },
 ];
 
 type Props = QueryEditorProps<DataSource, MyQuery, MyDataSourceOptions>;
@@ -20,7 +22,7 @@ export const QueryEditor: React.FC<Props> = props => {
 
   query = defaults(query, defaultQuery);
 
-  const onEntityTypeChange = (newEntity: EntitiyType) => {
+  const onEntityTypeChange = (newEntity: EntityType) => {
     onChange({ ...query, entityType: newEntity });
     onRunQuery();
   };
@@ -30,15 +32,19 @@ export const QueryEditor: React.FC<Props> = props => {
       <div className="gf-form">
         <label className="gf-form-label query-keyword width-8">Entity</label>
         <Select
+          className="width-12 min-width-12"
           options={EntityTypes}
           value={query.entityType}
-          onChange={e => onEntityTypeChange(e.value as EntitiyType)}
+          onChange={e => onEntityTypeChange(e.value as EntityType)}
         />
-        {query.entityType === EntitiyType.Dummy && (
+        {query.entityType === EntityType.Dummy && (
           <DummyEditor query={query} onChange={onChange} onRunQuery={onRunQuery}></DummyEditor>
         )}
-        {query.entityType === EntitiyType.Todos && (
+        {query.entityType === EntityType.Todos && (
           <TodosEditor query={query} onChange={onChange} onRunQuery={onRunQuery}></TodosEditor>
+        )}
+        {query.entityType === EntityType.JSONPlaceholder && (
+          <JSONPlaceholderEditor query={query} onChange={onChange} onRunQuery={onRunQuery}></JSONPlaceholderEditor>
         )}
       </div>
     </div>

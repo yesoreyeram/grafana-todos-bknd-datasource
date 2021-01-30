@@ -1,22 +1,29 @@
 import { DataQuery, DataSourceJsonData } from '@grafana/data';
 
-export enum EntitiyType {
+export enum EntityType {
   Dummy = 'dummy',
   Todos = 'todos',
+  JSONPlaceholder = 'jsonplaceholder',
+}
+export enum JSONPlaceholderEntity {
+  Todos = 'todos',
+  Users = 'users',
 }
 
 export interface MyQuery extends DataQuery {
-  entityType: EntitiyType;
+  entityType: EntityType;
   queryText?: string;
   constant?: number;
   numberOfTodos?: number;
   hideFinishedTodos?: boolean;
+  jsonPlaceholderEntity?: JSONPlaceholderEntity;
 }
 
 export const defaultQuery: Partial<MyQuery> = {
-  entityType: EntitiyType.Dummy,
+  entityType: EntityType.Dummy,
   numberOfTodos: 200,
   hideFinishedTodos: false,
+  jsonPlaceholderEntity: JSONPlaceholderEntity.Todos,
 };
 
 export interface MyDataSourceOptions extends DataSourceJsonData {
