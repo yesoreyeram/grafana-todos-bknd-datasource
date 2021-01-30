@@ -9,6 +9,8 @@ export interface MyQuery extends DataQuery {
   entityType: EntitiyType;
   queryText?: string;
   constant?: number;
+  numberOfTodos?: number;
+  hideFinishedTodos?: boolean;
 }
 
 export const defaultQuery: Partial<MyQuery> = {

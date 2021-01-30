@@ -12,9 +12,11 @@ import (
 )
 
 type queryModel struct {
-	EntityType string  `json:"entityType"`
-	Constant   float64 `json:"constant"`
-	QueryText  string  `json:"queryText"`
+	EntityType        string  `json:"entityType"`
+	Constant          float64 `json:"constant"`
+	QueryText         string  `json:"queryText"`
+	NumberOfTodos     int     `json:"numberOfTodos"`
+	HideFinishedTodos bool    `json:"hideFinishedTodos"`
 }
 
 type dataSource struct {
@@ -50,7 +52,7 @@ func (td *dataSource) query(ctx context.Context, query backend.DataQuery) backen
 		}
 		response.Frames = append(response.Frames, &dataFrameDummy)
 	case "todos":
-		dataFrameTodos, err := td.todoDatasource.Query()
+		dataFrameTodos, err := td.todoDatasource.Query(qm.NumberOfTodos, qm.HideFinishedTodos)
 		if err != nil {
 			response.Error = errors.New("Error parsing dataframes")
 			return response

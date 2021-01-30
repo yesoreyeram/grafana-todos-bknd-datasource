@@ -1,7 +1,7 @@
 import defaults from 'lodash/defaults';
 
 import React, { ChangeEvent } from 'react';
-import { LegacyForms, Select } from '@grafana/ui';
+import { LegacyForms, Select, Checkbox } from '@grafana/ui';
 import { QueryEditorProps } from '@grafana/data';
 import { DataSource } from './DataSource';
 import { defaultQuery, MyDataSourceOptions, MyQuery, EntitiyType } from './types';
@@ -55,6 +55,42 @@ const DummyEditor: React.FC<DummyProps> = props => {
   );
 };
 
+interface TodoEditorProps {
+  query: MyQuery;
+  onChange: (value: MyQuery) => void;
+  onRunQuery: () => void;
+}
+
+const TodosEditor: React.FC<TodoEditorProps> = props => {
+  let { onChange, query, onRunQuery } = props;
+
+  const onHideFinishedTodosChange = () => {
+    onChange({ ...query, hideFinishedTodos: !query.hideFinishedTodos });
+    onRunQuery();
+  };
+
+  const onNumberofTodosChange = (event: ChangeEvent<HTMLInputElement>) => {
+    onChange({ ...query, numberOfTodos: parseInt(event.target.value) });
+    onRunQuery();
+  };
+
+  return (
+    <>
+      <FormField
+        width={4}
+        labelWidth={8}
+        value={props.query.numberOfTodos}
+        onChange={onNumberofTodosChange}
+        label="Number of Todos"
+        type="number"
+        step="1"
+      />
+      <label className="gf-form-label query-keyword width-8">Hide Finished Todos</label>
+      <Checkbox css={{}} value={props.query.hideFinishedTodos} onChange={e => onHideFinishedTodosChange()}></Checkbox>
+    </>
+  );
+};
+
 export const QueryEditor: React.FC<Props> = props => {
   let { query, onChange, onRunQuery } = props;
 
@@ -76,6 +112,9 @@ export const QueryEditor: React.FC<Props> = props => {
         />
         {query.entityType === EntitiyType.Dummy && (
           <DummyEditor query={query} onChange={onChange} onRunQuery={onRunQuery}></DummyEditor>
+        )}
+        {query.entityType === EntitiyType.Todos && (
+          <TodosEditor query={query} onChange={onChange} onRunQuery={onRunQuery}></TodosEditor>
         )}
       </div>
     </div>

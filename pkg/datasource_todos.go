@@ -20,7 +20,16 @@ type todoDatasource struct {
 	logger log.Logger
 }
 
-func (td *todoDatasource) Query() (data.Frame, error) {
+func filterTodosByState(tds []todoItem, hideFinishedTodos bool) (ret []todoItem) {
+	for _, td := range tds {
+		if hideFinishedTodos == false || td.Completed == false {
+			ret = append(ret, td)
+		}
+	}
+	return ret
+}
+
+func (td *todoDatasource) Query(numberOfTodos int, hideFinishedTodos bool) (data.Frame, error) {
 	TodoURL := fmt.Sprintf("%s/%s", "https://jsonplaceholder.typicode.com", "todos")
 	res, err := http.Get(TodoURL)
 	if err != nil {
@@ -35,10 +44,11 @@ func (td *todoDatasource) Query() (data.Frame, error) {
 	var todoIDs []int64
 	var todoTitles []string
 	var todoStatuses []string
-	for _, todoitem := range todos {
-		todoIDs = append(todoIDs, todoitem.ID)
-		todoTitles = append(todoTitles, todoitem.Title)
-		todoStatuses = append(todoStatuses, strconv.FormatBool(todoitem.Completed))
+	filteredTodos := filterTodosByState(todos, hideFinishedTodos)
+	for i := 0; i < int(numberOfTodos) && i < len(filteredTodos); i++ {
+		todoIDs = append(todoIDs, filteredTodos[i].ID)
+		todoTitles = append(todoTitles, filteredTodos[i].Title)
+		todoStatuses = append(todoStatuses, strconv.FormatBool(filteredTodos[i].Completed))
 	}
 	frame := data.NewFrame("Todos")
 	frame.Fields = append(frame.Fields, data.NewField("ID", nil, todoIDs))
