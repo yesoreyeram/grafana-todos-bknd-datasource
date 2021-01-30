@@ -45,6 +45,9 @@ func (td *todoDatasource) Query(numberOfTodos int, hideFinishedTodos bool) (data
 	var todoTitles []string
 	var todoStatuses []string
 	filteredTodos := filterTodosByState(todos, hideFinishedTodos)
+	if numberOfTodos == 0 {
+		numberOfTodos = 200
+	}
 	for i := 0; i < int(numberOfTodos) && i < len(filteredTodos); i++ {
 		todoIDs = append(todoIDs, filteredTodos[i].ID)
 		todoTitles = append(todoTitles, filteredTodos[i].Title)

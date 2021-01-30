@@ -15,6 +15,8 @@ export interface MyQuery extends DataQuery {
 
 export const defaultQuery: Partial<MyQuery> = {
   entityType: EntitiyType.Dummy,
+  numberOfTodos: 200,
+  hideFinishedTodos: false,
 };
 
 export interface MyDataSourceOptions extends DataSourceJsonData {
