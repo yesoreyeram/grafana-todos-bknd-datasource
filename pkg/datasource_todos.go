@@ -1,12 +1,11 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
 	"strconv"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
+	"github.com/yesoreyeram/grafana-todos-bknd-datasource/pkg/jsonplaceholder"
 )
 
 type todoItem struct {
@@ -19,7 +18,7 @@ type todoDatasource struct {
 	logger log.Logger
 }
 
-func filterTodosByState(tds []todoItem, hideFinishedTodos bool) (ret []todoItem) {
+func filterTodosByState(tds []jsonplaceholder.ToDoItem, hideFinishedTodos bool) (ret []jsonplaceholder.ToDoItem) {
 	for _, td := range tds {
 		if hideFinishedTodos == false || td.Completed == false {
 			ret = append(ret, td)
@@ -30,19 +29,12 @@ func filterTodosByState(tds []todoItem, hideFinishedTodos bool) (ret []todoItem)
 
 func (td *todoDatasource) Query(numberOfTodos int, hideFinishedTodos bool, instance *instanceSettings, refID string) (frame data.Frame, err error) {
 	frame.Name, frame.RefID = refID, refID
-	TodoURL := fmt.Sprintf("%s/%s", "https://jsonplaceholder.typicode.com", "todos")
-	res, err := instance.httpClient.Get(TodoURL)
+	var todos []jsonplaceholder.ToDoItem
+	todos, err = jsonplaceholder.GetToDoItems()
 	if err != nil {
-		td.logger.Warn("Error getting data from jsonplaceholder")
 		return
 	}
-	defer res.Body.Close()
-	var todos []todoItem
-	err = json.NewDecoder(res.Body).Decode(&todos)
-	if err != nil {
-		td.logger.Warn("Error parsing data from jsonplaceholder")
-		return
-	}
+	var todoUserIDs []int64
 	var todoIDs []int64
 	var todoTitles []string
 	var todoStatuses []string
@@ -51,11 +43,13 @@ func (td *todoDatasource) Query(numberOfTodos int, hideFinishedTodos bool, insta
 		numberOfTodos = 200
 	}
 	for i := 0; i < int(numberOfTodos) && i < len(filteredTodos); i++ {
-		todoIDs = append(todoIDs, filteredTodos[i].ID)
+		todoIDs = append(todoIDs, int64(filteredTodos[i].ID))
+		todoUserIDs = append(todoUserIDs, int64(filteredTodos[i].UserID))
 		todoTitles = append(todoTitles, filteredTodos[i].Title)
 		todoStatuses = append(todoStatuses, strconv.FormatBool(filteredTodos[i].Completed))
 	}
-	frame.Fields = append(frame.Fields, data.NewField("ID", nil, todoIDs))
+	frame.Fields = append(frame.Fields, data.NewField("ID", nil, todoUserIDs))
+	frame.Fields = append(frame.Fields, data.NewField("User ID", nil, todoIDs))
 	frame.Fields = append(frame.Fields, data.NewField("Title", nil, todoTitles))
 	frame.Fields = append(frame.Fields, data.NewField("Status", nil, todoStatuses))
 	return frame, nil
