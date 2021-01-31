@@ -7,24 +7,15 @@ import (
 
 const jsonPlaceHolderURL = "https://jsonplaceholder.typicode.com"
 
-// ToDoItem structure
-type ToDoItem struct {
-	UserID    int    `json:"userId"`
-	ID        int    `json:"id"`
-	Title     string `json:"title"`
-	Completed bool   `json:"completed"`
-}
-
-// GetToDoItems returns list of ToDoItem
-func GetToDoItems() (todos []ToDoItem, err error) {
-	res, err := http.Get(jsonPlaceHolderURL + "/todos")
+func get(url string, obj interface{}) (err error) {
+	res, err := http.Get(jsonPlaceHolderURL + "/" + url)
 	if err != nil {
-		return nil, err
+		return
 	}
 	defer res.Body.Close()
-	err = json.NewDecoder(res.Body).Decode(&todos)
+	err = json.NewDecoder(res.Body).Decode(&obj)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return
+	return nil
 }
