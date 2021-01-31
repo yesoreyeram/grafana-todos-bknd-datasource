@@ -48,8 +48,8 @@ func (td *todoDatasource) Query(numberOfTodos int, hideFinishedTodos bool, insta
 		todoTitles = append(todoTitles, filteredTodos[i].Title)
 		todoStatuses = append(todoStatuses, strconv.FormatBool(filteredTodos[i].Completed))
 	}
-	frame.Fields = append(frame.Fields, data.NewField("ID", nil, todoUserIDs))
-	frame.Fields = append(frame.Fields, data.NewField("User ID", nil, todoIDs))
+	frame.Fields = append(frame.Fields, data.NewField("ID", nil, todoIDs))
+	frame.Fields = append(frame.Fields, data.NewField("User ID", nil, todoUserIDs))
 	frame.Fields = append(frame.Fields, data.NewField("Title", nil, todoTitles))
 	frame.Fields = append(frame.Fields, data.NewField("Status", nil, todoStatuses))
 	return frame, nil
