@@ -14,18 +14,18 @@ type jsonPlaceholderDatasource struct {
 	logger log.Logger
 }
 
-func (td *jsonPlaceholderDatasource) Query(jsonEntity string, instance *instanceSettings, refID string) (data.Frame, error) {
+func (td *jsonPlaceholderDatasource) Query(jsonEntity string, instance *instanceSettings, refID string) (frame data.Frame, err error) {
+	frame.Name, frame.RefID = refID, refID
 	TodoURL := fmt.Sprintf("%s/%s", "https://jsonplaceholder.typicode.com", jsonEntity)
-	frame := data.NewFrame(refID)
 	res, err := instance.httpClient.Get(TodoURL)
 	if err != nil {
-		return *frame, err
+		return
 	}
 	defer res.Body.Close()
 	var results []map[string]interface{}
 	err = json.NewDecoder(res.Body).Decode(&results)
 	if err != nil {
-		return *frame, err
+		return
 	}
 	keys := make([]string, 0)
 	for k := range results[0] {
@@ -63,5 +63,5 @@ func (td *jsonPlaceholderDatasource) Query(jsonEntity string, instance *instance
 			frame.Fields = append(frame.Fields, data.NewField(key, nil, items))
 		}
 	}
-	return *frame, nil
+	return frame, nil
 }

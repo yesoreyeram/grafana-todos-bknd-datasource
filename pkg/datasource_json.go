@@ -16,7 +16,7 @@ type jsonDatasource struct {
 }
 
 func (td *jsonDatasource) Query(jsonURL string, instance *instanceSettings, refID string) (frame data.Frame, err error) {
-	frame.Name = refID
+	frame.Name, frame.RefID = refID, refID
 	TodoURL := fmt.Sprintf("%s", jsonURL)
 	if TodoURL == "" {
 		err = errors.New("Invalid URL")

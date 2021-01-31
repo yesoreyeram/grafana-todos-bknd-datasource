@@ -28,18 +28,20 @@ func filterTodosByState(tds []todoItem, hideFinishedTodos bool) (ret []todoItem)
 	return ret
 }
 
-func (td *todoDatasource) Query(numberOfTodos int, hideFinishedTodos bool, instance *instanceSettings, refID string) (data.Frame, error) {
-	frame := data.NewFrame(refID)
+func (td *todoDatasource) Query(numberOfTodos int, hideFinishedTodos bool, instance *instanceSettings, refID string) (frame data.Frame, err error) {
+	frame.Name, frame.RefID = refID, refID
 	TodoURL := fmt.Sprintf("%s/%s", "https://jsonplaceholder.typicode.com", "todos")
 	res, err := instance.httpClient.Get(TodoURL)
 	if err != nil {
 		td.logger.Warn("Error getting data from jsonplaceholder")
+		return
 	}
 	defer res.Body.Close()
 	var todos []todoItem
 	err = json.NewDecoder(res.Body).Decode(&todos)
 	if err != nil {
 		td.logger.Warn("Error parsing data from jsonplaceholder")
+		return
 	}
 	var todoIDs []int64
 	var todoTitles []string
@@ -56,5 +58,5 @@ func (td *todoDatasource) Query(numberOfTodos int, hideFinishedTodos bool, insta
 	frame.Fields = append(frame.Fields, data.NewField("ID", nil, todoIDs))
 	frame.Fields = append(frame.Fields, data.NewField("Title", nil, todoTitles))
 	frame.Fields = append(frame.Fields, data.NewField("Status", nil, todoStatuses))
-	return *frame, nil
+	return frame, nil
 }
