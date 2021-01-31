@@ -1,4 +1,4 @@
-import React, { ChangeEvent, PureComponent } from 'react';
+import React, { ChangeEvent } from 'react';
 import { LegacyForms } from '@grafana/ui';
 import { DataSourcePluginOptionsEditorProps } from '@grafana/data';
 import { MyDataSourceOptions, MySecureJsonData } from '../types';
@@ -7,11 +7,12 @@ const { SecretFormField, FormField } = LegacyForms;
 
 interface Props extends DataSourcePluginOptionsEditorProps<MyDataSourceOptions> {}
 
-interface State {}
+export const ConfigEditor: React.FC<Props> = props => {
+  const { onOptionsChange, options } = props;
+  const { jsonData, secureJsonFields } = options;
+  const secureJsonData = (options.secureJsonData || {}) as MySecureJsonData;
 
-export class ConfigEditor extends PureComponent<Props, State> {
-  onPathChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const { onOptionsChange, options } = this.props;
+  const onPathChange = (event: ChangeEvent<HTMLInputElement>) => {
     const jsonData = {
       ...options.jsonData,
       path: event.target.value,
@@ -19,8 +20,15 @@ export class ConfigEditor extends PureComponent<Props, State> {
     onOptionsChange({ ...options, jsonData });
   };
 
-  onAPIKeyChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const { onOptionsChange, options } = this.props;
+  const onDefaultJSONChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const jsonData = {
+      ...options.jsonData,
+      defaultJSONURL: event.target.value,
+    };
+    onOptionsChange({ ...options, jsonData });
+  };
+
+  const onAPIKeyChange = (event: ChangeEvent<HTMLInputElement>) => {
     onOptionsChange({
       ...options,
       secureJsonData: {
@@ -29,8 +37,7 @@ export class ConfigEditor extends PureComponent<Props, State> {
     });
   };
 
-  onResetAPIKey = () => {
-    const { onOptionsChange, options } = this.props;
+  const onResetAPIKey = () => {
     onOptionsChange({
       ...options,
       secureJsonFields: {
@@ -44,39 +51,42 @@ export class ConfigEditor extends PureComponent<Props, State> {
     });
   };
 
-  render() {
-    const { options } = this.props;
-    const { jsonData, secureJsonFields } = options;
-    const secureJsonData = (options.secureJsonData || {}) as MySecureJsonData;
-
-    return (
-      <div className="gf-form-group">
+  return (
+    <div className="gf-form-group">
+      <div className="gf-form">
+        <FormField
+          label="Path"
+          labelWidth={6}
+          inputWidth={20}
+          onChange={onPathChange}
+          value={jsonData.path || ''}
+          placeholder="json field returned to frontend"
+        />
+      </div>
+      <div className="gf-form">
+        <FormField
+          label="Path"
+          labelWidth={6}
+          inputWidth={20}
+          onChange={onDefaultJSONChange}
+          value={jsonData.defaultJSONURL || ''}
+          placeholder="Default JSON URL"
+        />
+      </div>
+      <div className="gf-form-inline">
         <div className="gf-form">
-          <FormField
-            label="Path"
+          <SecretFormField
+            isConfigured={(secureJsonFields && secureJsonFields.apiKey) as boolean}
+            value={secureJsonData.apiKey || ''}
+            label="API Key"
+            placeholder="secure json field (backend only)"
             labelWidth={6}
             inputWidth={20}
-            onChange={this.onPathChange}
-            value={jsonData.path || ''}
-            placeholder="json field returned to frontend"
+            onReset={onResetAPIKey}
+            onChange={onAPIKeyChange}
           />
         </div>
-
-        <div className="gf-form-inline">
-          <div className="gf-form">
-            <SecretFormField
-              isConfigured={(secureJsonFields && secureJsonFields.apiKey) as boolean}
-              value={secureJsonData.apiKey || ''}
-              label="API Key"
-              placeholder="secure json field (backend only)"
-              labelWidth={6}
-              inputWidth={20}
-              onReset={this.onResetAPIKey}
-              onChange={this.onAPIKeyChange}
-            />
-          </div>
-        </div>
       </div>
-    );
-  }
-}
+    </div>
+  );
+};
