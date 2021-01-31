@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
@@ -29,6 +28,11 @@ type dataSource struct {
 	todoDatasource            todoDatasource
 }
 
+type dataSourceConfig struct {
+	Path           string `json:"path"`
+	DefaultJSONURL string `json:"defaultJSONURL"`
+}
+
 func (td *dataSource) getInstance(ctx backend.PluginContext) (*instanceSettings, error) {
 	instance, err := td.im.Get(ctx)
 	if err != nil {
@@ -37,21 +41,32 @@ func (td *dataSource) getInstance(ctx backend.PluginContext) (*instanceSettings,
 	return instance.(*instanceSettings), nil
 }
 
+func (td *dataSource) getInstanceConfig(req *backend.QueryDataRequest) (config *dataSourceConfig, err error) {
+	err = json.Unmarshal(req.PluginContext.DataSourceInstanceSettings.JSONData, &config)
+	if err != nil {
+		return nil, err
+	}
+	return config, err
+}
+
 func (td *dataSource) QueryData(ctx context.Context, req *backend.QueryDataRequest) (*backend.QueryDataResponse, error) {
 	response := backend.NewQueryDataResponse()
 	instance, err := td.getInstance(req.PluginContext)
 	if err != nil {
 		return response, err
 	}
-	td.logger.Warn(fmt.Sprintf("%v Query(s) Received.", len(req.Queries)))
+	config, err := td.getInstanceConfig(req)
+	if err != nil {
+		return response, err
+	}
 	for _, q := range req.Queries {
-		res := td.query(ctx, q, instance)
+		res := td.query(ctx, q, instance, *config)
 		response.Responses[q.RefID] = res
 	}
 	return response, nil
 }
 
-func (td *dataSource) query(ctx context.Context, query backend.DataQuery, instance *instanceSettings) backend.DataResponse {
+func (td *dataSource) query(ctx context.Context, query backend.DataQuery, instance *instanceSettings, config dataSourceConfig) backend.DataResponse {
 	var qm queryModel
 	response := backend.DataResponse{}
 	response.Error = json.Unmarshal(query.JSON, &qm)
@@ -81,7 +96,7 @@ func (td *dataSource) query(ctx context.Context, query backend.DataQuery, instan
 		}
 		response.Frames = append(response.Frames, &dataFrameJSONPlaceholders)
 	case "json":
-		dataFrameJSON, err := td.jsonDatasource.Query(qm.JSONURL, instance, query.RefID)
+		dataFrameJSON, err := td.jsonDatasource.Query(qm.JSONURL, instance, query.RefID, config)
 		if err != nil {
 			response.Error = err
 			return response

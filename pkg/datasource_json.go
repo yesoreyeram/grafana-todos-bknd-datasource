@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"sort"
 	"strconv"
@@ -15,12 +14,11 @@ type jsonDatasource struct {
 	logger log.Logger
 }
 
-func (td *jsonDatasource) Query(jsonURL string, instance *instanceSettings, refID string) (frame data.Frame, err error) {
+func (td *jsonDatasource) Query(jsonURL string, instance *instanceSettings, refID string, config dataSourceConfig) (frame data.Frame, err error) {
 	frame.Name, frame.RefID = refID, refID
 	TodoURL := fmt.Sprintf("%s", jsonURL)
 	if TodoURL == "" {
-		err = errors.New("Invalid URL")
-		return
+		TodoURL = config.DefaultJSONURL
 	}
 	res, err := instance.httpClient.Get(TodoURL)
 	if err != nil {
