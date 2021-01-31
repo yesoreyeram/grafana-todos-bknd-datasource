@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"sort"
 	"strconv"
 
@@ -15,10 +14,10 @@ type jsonPlaceholderDatasource struct {
 	logger log.Logger
 }
 
-func (td *jsonPlaceholderDatasource) Query(jsonEntity string) (data.Frame, error) {
+func (td *jsonPlaceholderDatasource) Query(jsonEntity string, instance *instanceSettings, refID string) (data.Frame, error) {
 	TodoURL := fmt.Sprintf("%s/%s", "https://jsonplaceholder.typicode.com", jsonEntity)
-	frame := data.NewFrame("JSONPlaceHolder")
-	res, err := http.Get(TodoURL)
+	frame := data.NewFrame(refID)
+	res, err := instance.httpClient.Get(TodoURL)
 	if err != nil {
 		return *frame, err
 	}

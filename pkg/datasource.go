@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
@@ -30,17 +29,29 @@ type dataSource struct {
 	todoDatasource            todoDatasource
 }
 
+func (td *dataSource) getInstance(ctx backend.PluginContext) (*instanceSettings, error) {
+	instance, err := td.im.Get(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return instance.(*instanceSettings), nil
+}
+
 func (td *dataSource) QueryData(ctx context.Context, req *backend.QueryDataRequest) (*backend.QueryDataResponse, error) {
-	td.logger.Warn(fmt.Sprintf("%v Query(s) Received.", len(req.Queries)))
 	response := backend.NewQueryDataResponse()
+	instance, err := td.getInstance(req.PluginContext)
+	if err != nil {
+		return response, err
+	}
+	td.logger.Warn(fmt.Sprintf("%v Query(s) Received.", len(req.Queries)))
 	for _, q := range req.Queries {
-		res := td.query(ctx, q)
+		res := td.query(ctx, q, instance)
 		response.Responses[q.RefID] = res
 	}
 	return response, nil
 }
 
-func (td *dataSource) query(ctx context.Context, query backend.DataQuery) backend.DataResponse {
+func (td *dataSource) query(ctx context.Context, query backend.DataQuery, instance *instanceSettings) backend.DataResponse {
 	var qm queryModel
 	response := backend.DataResponse{}
 	response.Error = json.Unmarshal(query.JSON, &qm)
@@ -49,30 +60,30 @@ func (td *dataSource) query(ctx context.Context, query backend.DataQuery) backen
 	}
 	switch qm.EntityType {
 	case "dummy":
-		dataFrameDummy, err := td.dummyDatasource.Query(int(qm.Constant), qm.QueryText)
+		dataFrameDummy, err := td.dummyDatasource.Query(int(qm.Constant), qm.QueryText, query.RefID)
 		if err != nil {
-			response.Error = errors.New("Error parsing dataframes")
+			response.Error = err
 			return response
 		}
 		response.Frames = append(response.Frames, &dataFrameDummy)
 	case "todos":
-		dataFrameTodos, err := td.todoDatasource.Query(qm.NumberOfTodos, qm.HideFinishedTodos)
+		dataFrameTodos, err := td.todoDatasource.Query(qm.NumberOfTodos, qm.HideFinishedTodos, instance, query.RefID)
 		if err != nil {
-			response.Error = errors.New("Error parsing dataframes")
+			response.Error = err
 			return response
 		}
 		response.Frames = append(response.Frames, &dataFrameTodos)
 	case "jsonplaceholder":
-		dataFrameJSONPlaceholders, err := td.jsonplaceholderDatasource.Query(qm.JSONPlaceholderEntity)
+		dataFrameJSONPlaceholders, err := td.jsonplaceholderDatasource.Query(qm.JSONPlaceholderEntity, instance, query.RefID)
 		if err != nil {
-			response.Error = errors.New("Error parsing dataframes")
+			response.Error = err
 			return response
 		}
 		response.Frames = append(response.Frames, &dataFrameJSONPlaceholders)
 	case "json":
-		dataFrameJSON, err := td.jsonDatasource.Query(qm.JSONURL)
+		dataFrameJSON, err := td.jsonDatasource.Query(qm.JSONURL, instance, query.RefID)
 		if err != nil {
-			response.Error = errors.New("Error parsing dataframes")
+			response.Error = err
 			return response
 		}
 		response.Frames = append(response.Frames, &dataFrameJSON)

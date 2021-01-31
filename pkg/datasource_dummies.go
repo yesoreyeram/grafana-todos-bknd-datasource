@@ -11,7 +11,7 @@ type dummyDatasource struct {
 	logger log.Logger
 }
 
-func (ds *dummyDatasource) Query(constant int, queryText string) (data.Frame, error) {
+func (ds *dummyDatasource) Query(constant int, queryText string, refID string) (data.Frame, error) {
 	var timeslices []time.Time
 	var valueslices []int64
 	var stringslices []string
@@ -21,7 +21,7 @@ func (ds *dummyDatasource) Query(constant int, queryText string) (data.Frame, er
 		stringslices = append(stringslices, "hello")
 		valueslices = append(valueslices, int64(i+1))
 	}
-	frame := data.NewFrame("Dummy Data")
+	frame := data.NewFrame(refID)
 	frame.Fields = append(frame.Fields, data.NewField("Time", nil, timeslices))
 	frame.Fields = append(frame.Fields, data.NewField("Strings", nil, stringslices))
 	frame.Fields = append(frame.Fields, data.NewField(queryText, nil, valueslices))

@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"strconv"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
@@ -29,9 +28,10 @@ func filterTodosByState(tds []todoItem, hideFinishedTodos bool) (ret []todoItem)
 	return ret
 }
 
-func (td *todoDatasource) Query(numberOfTodos int, hideFinishedTodos bool) (data.Frame, error) {
+func (td *todoDatasource) Query(numberOfTodos int, hideFinishedTodos bool, instance *instanceSettings, refID string) (data.Frame, error) {
+	frame := data.NewFrame(refID)
 	TodoURL := fmt.Sprintf("%s/%s", "https://jsonplaceholder.typicode.com", "todos")
-	res, err := http.Get(TodoURL)
+	res, err := instance.httpClient.Get(TodoURL)
 	if err != nil {
 		td.logger.Warn("Error getting data from jsonplaceholder")
 	}
@@ -53,7 +53,6 @@ func (td *todoDatasource) Query(numberOfTodos int, hideFinishedTodos bool) (data
 		todoTitles = append(todoTitles, filteredTodos[i].Title)
 		todoStatuses = append(todoStatuses, strconv.FormatBool(filteredTodos[i].Completed))
 	}
-	frame := data.NewFrame("Todos")
 	frame.Fields = append(frame.Fields, data.NewField("ID", nil, todoIDs))
 	frame.Fields = append(frame.Fields, data.NewField("Title", nil, todoTitles))
 	frame.Fields = append(frame.Fields, data.NewField("Status", nil, todoStatuses))

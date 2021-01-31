@@ -2,8 +2,8 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
-	"net/http"
 	"sort"
 	"strconv"
 
@@ -15,20 +15,24 @@ type jsonDatasource struct {
 	logger log.Logger
 }
 
-func (td *jsonDatasource) Query(jsonURL string) (data.Frame, error) {
+func (td *jsonDatasource) Query(jsonURL string, instance *instanceSettings, refID string) (frame data.Frame, err error) {
+	frame.Name = refID
 	TodoURL := fmt.Sprintf("%s", jsonURL)
-	frame := data.NewFrame("JSON")
-	res, err := http.Get(TodoURL)
+	if TodoURL == "" {
+		err = errors.New("Invalid URL")
+		return
+	}
+	res, err := instance.httpClient.Get(TodoURL)
 	if err != nil {
 		td.logger.Error("Error retreiving data from URL")
-		return *frame, err
+		return
 	}
 	defer res.Body.Close()
 	var results []map[string]interface{}
 	err = json.NewDecoder(res.Body).Decode(&results)
 	if err != nil {
 		td.logger.Error("Error parsing data received")
-		return *frame, err
+		return frame, err
 	}
 	keys := make([]string, 0)
 	for k := range results[0] {
@@ -74,5 +78,5 @@ func (td *jsonDatasource) Query(jsonURL string) (data.Frame, error) {
 			frame.Fields = append(frame.Fields, data.NewField(key, nil, items))
 		}
 	}
-	return *frame, nil
+	return frame, nil
 }
