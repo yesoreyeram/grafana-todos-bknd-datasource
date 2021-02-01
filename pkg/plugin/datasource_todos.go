@@ -1,4 +1,4 @@
-package main
+package plugin
 
 import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
@@ -13,16 +13,7 @@ type todoItem struct {
 }
 
 type todoDatasource struct {
-	logger log.Logger
-}
-
-func filterTodosByState(tds []jsonplaceholder.ToDoItem, hideFinishedTodos bool) (ret []jsonplaceholder.ToDoItem) {
-	for _, td := range tds {
-		if hideFinishedTodos == false || td.Completed == false {
-			ret = append(ret, td)
-		}
-	}
-	return ret
+	Logger log.Logger
 }
 
 func (td *todoDatasource) Query(numberOfTodos int, hideFinishedTodos bool, instance *instanceSettings, refID string) (frame data.Frame, err error) {
@@ -32,14 +23,14 @@ func (td *todoDatasource) Query(numberOfTodos int, hideFinishedTodos bool, insta
 	if err != nil {
 		return
 	}
-	var todoUserIDs []int64
-	var todoIDs []int64
-	var todoTitles []string
-	var todoStatuses []bool
 	filteredTodos := filterTodosByState(todos, hideFinishedTodos)
 	if numberOfTodos == 0 {
 		numberOfTodos = 200
 	}
+	var todoUserIDs []int64
+	var todoIDs []int64
+	var todoTitles []string
+	var todoStatuses []bool
 	for i := 0; i < int(numberOfTodos) && i < len(filteredTodos); i++ {
 		todoIDs = append(todoIDs, int64(filteredTodos[i].ID))
 		todoUserIDs = append(todoUserIDs, int64(filteredTodos[i].UserID))
@@ -51,4 +42,13 @@ func (td *todoDatasource) Query(numberOfTodos int, hideFinishedTodos bool, insta
 	frame.Fields = append(frame.Fields, data.NewField("Title", nil, todoTitles))
 	frame.Fields = append(frame.Fields, data.NewField("Status", nil, todoStatuses))
 	return frame, nil
+}
+
+func filterTodosByState(tds []jsonplaceholder.ToDoItem, hideFinishedTodos bool) (ret []jsonplaceholder.ToDoItem) {
+	for _, td := range tds {
+		if hideFinishedTodos == false || td.Completed == false {
+			ret = append(ret, td)
+		}
+	}
+	return ret
 }

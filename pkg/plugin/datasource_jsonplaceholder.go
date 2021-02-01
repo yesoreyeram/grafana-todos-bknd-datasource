@@ -1,4 +1,4 @@
-package main
+package plugin
 
 import (
 	"encoding/json"
@@ -10,7 +10,7 @@ import (
 )
 
 type jsonPlaceholderDatasource struct {
-	logger log.Logger
+	Logger log.Logger
 }
 
 func (td *jsonPlaceholderDatasource) Query(jsonEntity string, instance *instanceSettings, refID string) (frame data.Frame, err error) {

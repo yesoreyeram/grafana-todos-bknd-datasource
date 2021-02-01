@@ -1,8 +1,9 @@
-package main
+package plugin
 
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"sort"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
@@ -10,10 +11,14 @@ import (
 )
 
 type jsonDatasource struct {
-	logger log.Logger
+	Logger log.Logger
 }
 
-func (td *jsonDatasource) Query(jsonURL string, instance *instanceSettings, refID string, config dataSourceConfig) (frame data.Frame, err error) {
+func getDataframeFromJSONReponse(r io.Reader) (frame data.Frame, err error) {
+	return frame, err
+}
+
+func (td *jsonDatasource) Query(jsonURL string, instance *instanceSettings, refID string, config DataSourceConfig) (frame data.Frame, err error) {
 	frame.Name, frame.RefID = refID, refID
 	TodoURL := fmt.Sprintf("%s", jsonURL)
 	if TodoURL == "" {
@@ -21,14 +26,14 @@ func (td *jsonDatasource) Query(jsonURL string, instance *instanceSettings, refI
 	}
 	res, err := instance.httpClient.Get(TodoURL)
 	if err != nil {
-		td.logger.Error("Error retreiving data from URL")
+		td.Logger.Error("Error retreiving data from URL")
 		return
 	}
 	defer res.Body.Close()
 	var results []map[string]interface{}
 	err = json.NewDecoder(res.Body).Decode(&results)
 	if err != nil {
-		td.logger.Error("Error parsing data received")
+		td.Logger.Error("Error parsing data received")
 		return frame, err
 	}
 	keys := make([]string, 0)

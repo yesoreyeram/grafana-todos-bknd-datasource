@@ -5,40 +5,20 @@ import (
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/datasource"
-	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
+	"github.com/yesoreyeram/grafana-todos-bknd-datasource/pkg/plugin"
 )
 
 func main() {
 
-	backend.SetupPluginEnvironment("yesoreyeram-todosbknd-datasource")
+	const pluginID = "yesoreyeram-todosbknd-datasource"
 
-	logger := log.New()
-	dummyds := &dummyDatasource{
-		logger: logger,
-	}
-	todods := &todoDatasource{
-		logger: logger,
-	}
-	jsonplaceholderds := &jsonPlaceholderDatasource{
-		logger: logger,
-	}
-	jsonds := &jsonDatasource{
-		logger: logger,
-	}
-	ds := &dataSource{
-		im:                        datasource.NewInstanceManager(newDataSourceInstance),
-		logger:                    logger,
-		jsonplaceholderDatasource: *jsonplaceholderds,
-		jsonDatasource:            *jsonds,
-		dummyDatasource:           *dummyds,
-		todoDatasource:            *todods,
-	}
-	err := datasource.Serve(datasource.ServeOpts{
-		QueryDataHandler:   ds,
-		CheckHealthHandler: ds,
-	})
+	backend.SetupPluginEnvironment(pluginID)
+
+	err := datasource.Serve(plugin.GetDatasourceServeOpts())
+
 	if err != nil {
-		logger.Error(err.Error())
+		backend.Logger.Error(err.Error())
 		os.Exit(1)
 	}
+
 }

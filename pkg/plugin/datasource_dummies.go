@@ -1,4 +1,4 @@
-package main
+package plugin
 
 import (
 	"time"
@@ -8,7 +8,8 @@ import (
 )
 
 type dummyDatasource struct {
-	logger log.Logger
+	Logger log.Logger
+	name   string
 }
 
 func (ds *dummyDatasource) Query(constant int, queryText string, refID string) (frame data.Frame, err error) {
