@@ -31,18 +31,12 @@ func GetDatasourceServeOpts() datasource.ServeOpts {
 	todods := &todoDatasource{
 		Logger: loggerInstance,
 	}
-	jsonplaceholderds := &jsonPlaceholderDatasource{
-		Logger: loggerInstance,
-	}
-	jsonds := &jsonDatasource{
-		Logger: loggerInstance,
-	}
 	handler := &dataSource{
 		InstanceManager:           datasource.NewInstanceManager(newDataSourceInstance),
 		DummyDatasource:           *dummyds,
 		TodoDatasource:            *todods,
-		JSONplaceholderDatasource: *jsonplaceholderds,
-		JSONDatasource:            *jsonds,
+		JSONplaceholderDatasource: jsonPlaceholderDatasource{},
+		JSONDatasource:            jsonDatasource{},
 	}
 	return datasource.ServeOpts{
 		CheckHealthHandler: handler,
