@@ -4,23 +4,19 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"sort"
 
 	"github.com/grafana/grafana-plugin-sdk-go/data"
 )
 
+// GetDataframeFromJSONReponse receives http JSON array response and converts into dataframes
 func GetDataframeFromJSONReponse(body io.ReadCloser, refID string) (frame data.Frame, err error) {
 	frame.Name, frame.RefID = refID, refID
 	var results []map[string]interface{}
 	err = json.NewDecoder(body).Decode(&results)
 	if err != nil {
-		return frame, err
+		return
 	}
-	keys := make([]string, 0)
-	for k := range results[0] {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
+	keys := getKeysFromSlice(results)
 	for _, key := range keys {
 		switch results[0][key].(type) {
 		case string:
