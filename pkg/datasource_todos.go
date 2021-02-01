@@ -1,8 +1,6 @@
 package main
 
 import (
-	"strconv"
-
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
 	"github.com/yesoreyeram/grafana-todos-bknd-datasource/pkg/jsonplaceholder"
@@ -37,7 +35,7 @@ func (td *todoDatasource) Query(numberOfTodos int, hideFinishedTodos bool, insta
 	var todoUserIDs []int64
 	var todoIDs []int64
 	var todoTitles []string
-	var todoStatuses []string
+	var todoStatuses []bool
 	filteredTodos := filterTodosByState(todos, hideFinishedTodos)
 	if numberOfTodos == 0 {
 		numberOfTodos = 200
@@ -46,7 +44,7 @@ func (td *todoDatasource) Query(numberOfTodos int, hideFinishedTodos bool, insta
 		todoIDs = append(todoIDs, int64(filteredTodos[i].ID))
 		todoUserIDs = append(todoUserIDs, int64(filteredTodos[i].UserID))
 		todoTitles = append(todoTitles, filteredTodos[i].Title)
-		todoStatuses = append(todoStatuses, strconv.FormatBool(filteredTodos[i].Completed))
+		todoStatuses = append(todoStatuses, filteredTodos[i].Completed)
 	}
 	frame.Fields = append(frame.Fields, data.NewField("ID", nil, todoIDs))
 	frame.Fields = append(frame.Fields, data.NewField("User ID", nil, todoUserIDs))

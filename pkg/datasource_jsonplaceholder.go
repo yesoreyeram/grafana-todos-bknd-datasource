@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
-	"strconv"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
@@ -47,9 +46,9 @@ func (td *jsonPlaceholderDatasource) Query(jsonEntity string, instance *instance
 			}
 			frame.Fields = append(frame.Fields, data.NewField(key, nil, items))
 		case bool:
-			var items []string
+			var items []bool
 			for _, result := range results {
-				items = append(items, fmt.Sprintf("%v", strconv.FormatBool(result[key].(bool))))
+				items = append(items, result[key].(bool))
 			}
 			frame.Fields = append(frame.Fields, data.NewField(key, nil, items))
 		default:

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
-	"strconv"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
@@ -56,10 +55,10 @@ func (td *jsonDatasource) Query(jsonURL string, instance *instanceSettings, refI
 			}
 			frame.Fields = append(frame.Fields, data.NewField(key, nil, items))
 		case bool:
-			items := make([]string, len(results))
+			items := make([]bool, len(results))
 			for i, result := range results {
 				if result[key] != nil {
-					items[i] = fmt.Sprintf("%v", strconv.FormatBool(result[key].(bool)))
+					items[i] = result[key].(bool)
 				}
 			}
 			frame.Fields = append(frame.Fields, data.NewField(key, nil, items))
