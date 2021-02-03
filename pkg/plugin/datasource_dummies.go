@@ -3,13 +3,11 @@ package plugin
 import (
 	"time"
 
-	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
 )
 
 type dummyDatasource struct {
-	Logger log.Logger
-	name   string
+	name string
 }
 
 func (ds *dummyDatasource) Query(constant int, queryText string, refID string) (frame data.Frame, err error) {

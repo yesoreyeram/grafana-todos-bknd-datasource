@@ -20,43 +20,24 @@ type queryModel struct {
 	JSONURL               string  `json:"jsonURL"`
 }
 
-// DataSource structure
-type DataSource struct {
-	InstanceManager           instancemgmt.InstanceManager
-	Logger                    log.Logger
-	JSONDatasource            jsonDatasource
-	JSONplaceholderDatasource jsonPlaceholderDatasource
-	DummyDatasource           dummyDatasource
-	TodoDatasource            todoDatasource
+// TodosDataSource structure
+type TodosDataSource struct {
+	InstanceManager instancemgmt.InstanceManager
+	Logger          log.Logger
 }
 
 // NewDataSource return instance of new DataSource
-func NewDataSource() (ds *DataSource) {
+func NewDataSource() (ds *TodosDataSource) {
 	loggerInstance := log.New()
-	dummyds := &dummyDatasource{
-		Logger: loggerInstance,
-	}
-	todods := &todoDatasource{
-		Logger: loggerInstance,
-	}
-	ds = &DataSource{
-		InstanceManager:           datasource.NewInstanceManager(newDataSourceInstance),
-		DummyDatasource:           *dummyds,
-		TodoDatasource:            *todods,
-		JSONplaceholderDatasource: jsonPlaceholderDatasource{},
-		JSONDatasource:            jsonDatasource{},
+	ds = &TodosDataSource{
+		Logger:          loggerInstance,
+		InstanceManager: datasource.NewInstanceManager(newDataSourceInstance),
 	}
 	return ds
 }
 
-// DataSourceConfig return structure of DataSource Configuration
-type DataSourceConfig struct {
-	Path           string `json:"path"`
-	DefaultJSONURL string `json:"defaultJSONURL"`
-}
-
 // CheckHealth returns healthstatus of the datasource
-func (td *DataSource) CheckHealth(ctx context.Context, req *backend.CheckHealthRequest) (*backend.CheckHealthResult, error) {
+func (td *TodosDataSource) CheckHealth(ctx context.Context, req *backend.CheckHealthRequest) (*backend.CheckHealthResult, error) {
 	return &backend.CheckHealthResult{
 		Status:  backend.HealthStatusOk,
 		Message: "Health status not configured",
@@ -64,13 +45,13 @@ func (td *DataSource) CheckHealth(ctx context.Context, req *backend.CheckHealthR
 }
 
 // QueryData return results Grafana format
-func (td *DataSource) QueryData(ctx context.Context, req *backend.QueryDataRequest) (*backend.QueryDataResponse, error) {
+func (td *TodosDataSource) QueryData(ctx context.Context, req *backend.QueryDataRequest) (*backend.QueryDataResponse, error) {
 	response := backend.NewQueryDataResponse()
-	instance, err := td.getInstance(req.PluginContext)
+	instance, err := getInstance(td.InstanceManager, req.PluginContext)
 	if err != nil {
 		return response, err
 	}
-	config, err := td.getInstanceConfig(req)
+	config, err := instance.getInstanceConfig(req)
 	if err != nil {
 		return response, err
 	}
@@ -81,7 +62,7 @@ func (td *DataSource) QueryData(ctx context.Context, req *backend.QueryDataReque
 	return response, nil
 }
 
-func (td *DataSource) query(ctx context.Context, query backend.DataQuery, instance *instanceSettings, config DataSourceConfig) backend.DataResponse {
+func (td *TodosDataSource) query(ctx context.Context, query backend.DataQuery, instance *dsInstance, config instanceConfig) backend.DataResponse {
 	var qm queryModel
 	response := backend.DataResponse{}
 	response.Error = json.Unmarshal(query.JSON, &qm)
@@ -90,28 +71,32 @@ func (td *DataSource) query(ctx context.Context, query backend.DataQuery, instan
 	}
 	switch qm.EntityType {
 	case "dummy":
-		dataFrameDummy, err := td.DummyDatasource.Query(int(qm.Constant), qm.QueryText, query.RefID)
+		dummyDatasource := &dummyDatasource{}
+		dataFrameDummy, err := dummyDatasource.Query(int(qm.Constant), qm.QueryText, query.RefID)
 		if err != nil {
 			response.Error = err
 			return response
 		}
 		response.Frames = append(response.Frames, &dataFrameDummy)
 	case "todos":
-		dataFrameTodos, err := td.TodoDatasource.Query(qm.NumberOfTodos, qm.HideFinishedTodos, instance, query.RefID)
+		todoDatasource := &todoDatasource{}
+		dataFrameTodos, err := todoDatasource.Query(qm.NumberOfTodos, qm.HideFinishedTodos, instance, query.RefID)
 		if err != nil {
 			response.Error = err
 			return response
 		}
 		response.Frames = append(response.Frames, &dataFrameTodos)
 	case "jsonplaceholder":
-		dataFrameJSONPlaceholders, err := td.JSONplaceholderDatasource.Query(qm.JSONPlaceholderEntity, instance, query.RefID)
+		jsonPlaceholderDatasource := jsonPlaceholderDatasource{}
+		dataFrameJSONPlaceholders, err := jsonPlaceholderDatasource.Query(qm.JSONPlaceholderEntity, instance, query.RefID)
 		if err != nil {
 			response.Error = err
 			return response
 		}
 		response.Frames = append(response.Frames, &dataFrameJSONPlaceholders)
 	case "json":
-		dataFrameJSON, err := td.JSONDatasource.Query(qm.JSONURL, instance, query.RefID, config)
+		jsonDatasource := jsonDatasource{}
+		dataFrameJSON, err := jsonDatasource.Query(qm.JSONURL, instance, query.RefID, config)
 		if err != nil {
 			response.Error = err
 			return response
@@ -119,20 +104,4 @@ func (td *DataSource) query(ctx context.Context, query backend.DataQuery, instan
 		response.Frames = append(response.Frames, &dataFrameJSON)
 	}
 	return response
-}
-
-func (td *DataSource) getInstance(ctx backend.PluginContext) (*instanceSettings, error) {
-	instance, err := td.InstanceManager.Get(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return instance.(*instanceSettings), nil
-}
-
-func (td *DataSource) getInstanceConfig(req *backend.QueryDataRequest) (config *DataSourceConfig, err error) {
-	err = json.Unmarshal(req.PluginContext.DataSourceInstanceSettings.JSONData, &config)
-	if err != nil {
-		return nil, err
-	}
-	return config, err
 }

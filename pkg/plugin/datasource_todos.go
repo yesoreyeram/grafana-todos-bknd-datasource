@@ -1,7 +1,6 @@
 package plugin
 
 import (
-	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
 	"github.com/yesoreyeram/grafana-todos-bknd-datasource/pkg/jsonplaceholder"
 )
@@ -12,11 +11,9 @@ type todoItem struct {
 	Completed bool   `json:"completed"`
 }
 
-type todoDatasource struct {
-	Logger log.Logger
-}
+type todoDatasource struct{}
 
-func (td *todoDatasource) Query(numberOfTodos int, hideFinishedTodos bool, instance *instanceSettings, refID string) (frame data.Frame, err error) {
+func (td *todoDatasource) Query(numberOfTodos int, hideFinishedTodos bool, instance *dsInstance, refID string) (frame data.Frame, err error) {
 	frame.Name, frame.RefID = refID, refID
 	var todos []jsonplaceholder.ToDoItem
 	todos, err = jsonplaceholder.GetToDoItems()

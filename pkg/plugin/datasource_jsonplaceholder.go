@@ -9,7 +9,7 @@ import (
 
 type jsonPlaceholderDatasource struct{}
 
-func (td *jsonPlaceholderDatasource) Query(jsonEntity string, instance *instanceSettings, refID string) (frame data.Frame, err error) {
+func (td *jsonPlaceholderDatasource) Query(jsonEntity string, instance *dsInstance, refID string) (frame data.Frame, err error) {
 	TodoURL := fmt.Sprintf("%s/%s", "https://jsonplaceholder.typicode.com", jsonEntity)
 	res, err := instance.httpClient.Get(TodoURL)
 	if err != nil {

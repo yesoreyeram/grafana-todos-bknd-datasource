@@ -9,7 +9,7 @@ import (
 
 type jsonDatasource struct{}
 
-func (td *jsonDatasource) Query(jsonURL string, instance *instanceSettings, refID string, config DataSourceConfig) (frame data.Frame, err error) {
+func (td *jsonDatasource) Query(jsonURL string, instance *dsInstance, refID string, config instanceConfig) (frame data.Frame, err error) {
 	JSONURL := fmt.Sprintf("%s", jsonURL)
 	if JSONURL == "" {
 		JSONURL = config.DefaultJSONURL
