@@ -4,9 +4,7 @@ import (
 	"net/http"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
-	"github.com/grafana/grafana-plugin-sdk-go/backend/datasource"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
-	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 )
 
 type instanceSettings struct {
@@ -20,26 +18,4 @@ func newDataSourceInstance(setting backend.DataSourceInstanceSettings) (instance
 	return &instanceSettings{
 		httpClient: &http.Client{},
 	}, nil
-}
-
-// GetDatasourceServeOpts returns server options required to run as a grafana plugin
-func GetDatasourceServeOpts() datasource.ServeOpts {
-	loggerInstance := log.New()
-	dummyds := &dummyDatasource{
-		Logger: loggerInstance,
-	}
-	todods := &todoDatasource{
-		Logger: loggerInstance,
-	}
-	handler := &dataSource{
-		InstanceManager:           datasource.NewInstanceManager(newDataSourceInstance),
-		DummyDatasource:           *dummyds,
-		TodoDatasource:            *todods,
-		JSONplaceholderDatasource: jsonPlaceholderDatasource{},
-		JSONDatasource:            jsonDatasource{},
-	}
-	return datasource.ServeOpts{
-		CheckHealthHandler: handler,
-		QueryDataHandler:   handler,
-	}
 }

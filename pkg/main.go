@@ -10,14 +10,17 @@ import (
 
 func main() {
 
-	const pluginID = "yesoreyeram-todosbknd-datasource"
+	backend.SetupPluginEnvironment("yesoreyeram-todosbknd-datasource")
 
-	backend.SetupPluginEnvironment(pluginID)
+	ds := plugin.NewDataSource()
 
-	err := datasource.Serve(plugin.GetDatasourceServeOpts())
+	err := datasource.Serve(datasource.ServeOpts{
+		CheckHealthHandler: ds,
+		QueryDataHandler:   ds,
+	})
 
 	if err != nil {
-		backend.Logger.Error(err.Error())
+		ds.Logger.Error(err.Error())
 		os.Exit(1)
 	}
 

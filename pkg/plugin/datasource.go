@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
+	"github.com/grafana/grafana-plugin-sdk-go/backend/datasource"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 )
@@ -19,14 +20,33 @@ type queryModel struct {
 	JSONURL               string  `json:"jsonURL"`
 }
 
-// dataSource structure
-type dataSource struct {
+// DataSource structure
+type DataSource struct {
 	InstanceManager           instancemgmt.InstanceManager
 	Logger                    log.Logger
 	JSONDatasource            jsonDatasource
 	JSONplaceholderDatasource jsonPlaceholderDatasource
 	DummyDatasource           dummyDatasource
 	TodoDatasource            todoDatasource
+}
+
+// NewDataSource return instance of new DataSource
+func NewDataSource() (ds *DataSource) {
+	loggerInstance := log.New()
+	dummyds := &dummyDatasource{
+		Logger: loggerInstance,
+	}
+	todods := &todoDatasource{
+		Logger: loggerInstance,
+	}
+	ds = &DataSource{
+		InstanceManager:           datasource.NewInstanceManager(newDataSourceInstance),
+		DummyDatasource:           *dummyds,
+		TodoDatasource:            *todods,
+		JSONplaceholderDatasource: jsonPlaceholderDatasource{},
+		JSONDatasource:            jsonDatasource{},
+	}
+	return ds
 }
 
 // DataSourceConfig return structure of DataSource Configuration
@@ -36,7 +56,7 @@ type DataSourceConfig struct {
 }
 
 // CheckHealth returns healthstatus of the datasource
-func (td *dataSource) CheckHealth(ctx context.Context, req *backend.CheckHealthRequest) (*backend.CheckHealthResult, error) {
+func (td *DataSource) CheckHealth(ctx context.Context, req *backend.CheckHealthRequest) (*backend.CheckHealthResult, error) {
 	return &backend.CheckHealthResult{
 		Status:  backend.HealthStatusOk,
 		Message: "Health status not configured",
@@ -44,7 +64,7 @@ func (td *dataSource) CheckHealth(ctx context.Context, req *backend.CheckHealthR
 }
 
 // QueryData return results Grafana format
-func (td *dataSource) QueryData(ctx context.Context, req *backend.QueryDataRequest) (*backend.QueryDataResponse, error) {
+func (td *DataSource) QueryData(ctx context.Context, req *backend.QueryDataRequest) (*backend.QueryDataResponse, error) {
 	response := backend.NewQueryDataResponse()
 	instance, err := td.getInstance(req.PluginContext)
 	if err != nil {
@@ -61,7 +81,7 @@ func (td *dataSource) QueryData(ctx context.Context, req *backend.QueryDataReque
 	return response, nil
 }
 
-func (td *dataSource) query(ctx context.Context, query backend.DataQuery, instance *instanceSettings, config DataSourceConfig) backend.DataResponse {
+func (td *DataSource) query(ctx context.Context, query backend.DataQuery, instance *instanceSettings, config DataSourceConfig) backend.DataResponse {
 	var qm queryModel
 	response := backend.DataResponse{}
 	response.Error = json.Unmarshal(query.JSON, &qm)
@@ -101,7 +121,7 @@ func (td *dataSource) query(ctx context.Context, query backend.DataQuery, instan
 	return response
 }
 
-func (td *dataSource) getInstance(ctx backend.PluginContext) (*instanceSettings, error) {
+func (td *DataSource) getInstance(ctx backend.PluginContext) (*instanceSettings, error) {
 	instance, err := td.InstanceManager.Get(ctx)
 	if err != nil {
 		return nil, err
@@ -109,7 +129,7 @@ func (td *dataSource) getInstance(ctx backend.PluginContext) (*instanceSettings,
 	return instance.(*instanceSettings), nil
 }
 
-func (td *dataSource) getInstanceConfig(req *backend.QueryDataRequest) (config *DataSourceConfig, err error) {
+func (td *DataSource) getInstanceConfig(req *backend.QueryDataRequest) (config *DataSourceConfig, err error) {
 	err = json.Unmarshal(req.PluginContext.DataSourceInstanceSettings.JSONData, &config)
 	if err != nil {
 		return nil, err
