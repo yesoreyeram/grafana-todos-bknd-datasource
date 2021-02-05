@@ -9,6 +9,7 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend/datasource"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 type queryModel struct {
@@ -48,6 +49,7 @@ func (td *TodosDataSource) CheckHealth(ctx context.Context, req *backend.CheckHe
 
 // QueryData return results Grafana format
 func (td *TodosDataSource) QueryData(ctx context.Context, req *backend.QueryDataRequest) (*backend.QueryDataResponse, error) {
+	promRequestsTotal.Inc()
 	response := backend.NewQueryDataResponse()
 	instance, err := getInstance(td.InstanceManager, req.PluginContext)
 	if err != nil {
@@ -71,6 +73,10 @@ func (td *TodosDataSource) query(ctx context.Context, query backend.DataQuery, i
 	if response.Error != nil {
 		return response
 	}
+	promQueriesTotal.With(
+		prometheus.Labels{
+			"entityType": qm.EntityType,
+		}).Inc()
 	switch qm.EntityType {
 	case "dummy":
 		dummyDatasource := &dummyDatasource{}

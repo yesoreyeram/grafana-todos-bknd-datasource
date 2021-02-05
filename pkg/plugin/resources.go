@@ -5,6 +5,25 @@ import (
 	"net/http"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+)
+
+const appPrefix = "todo"
+
+var (
+	promRequestsTotal = promauto.NewCounter(prometheus.CounterOpts{
+		Name: fmt.Sprintf("%s_requests_total", appPrefix),
+		Help: "The total number of queries",
+	})
+	promQueriesTotal = promauto.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: fmt.Sprintf("%s_queries_total", appPrefix),
+			Help: "The total number of queries",
+		},
+		[]string{"entityType"},
+	)
 )
 
 func handlePing(rw http.ResponseWriter, req *http.Request) {
@@ -14,4 +33,5 @@ func handlePing(rw http.ResponseWriter, req *http.Request) {
 
 func handleRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/ping", handlePing)
+	mux.Handle("/metrics", promhttp.Handler())
 }
