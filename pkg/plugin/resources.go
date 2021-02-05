@@ -34,9 +34,9 @@ func handlePing(rw http.ResponseWriter, req *http.Request) {
 func handleRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/ping", handlePing)
 
-	mux.Handle("/internal/metrics", promhttp.Handler())
+	mux.Handle("/metrics", promhttp.Handler())
 
 	promMetricsRegistry.MustRegister(promRequestsTotal)
 	promMetricsRegistry.MustRegister(promQueriesTotal)
-	mux.Handle("/metrics", promhttp.HandlerFor(promMetricsRegistry, promhttp.HandlerOpts{}))
+	mux.Handle("/todos/metrics", promhttp.HandlerFor(promMetricsRegistry, promhttp.HandlerOpts{}))
 }
