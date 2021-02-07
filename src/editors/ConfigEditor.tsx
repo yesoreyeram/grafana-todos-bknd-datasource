@@ -12,6 +12,14 @@ export const ConfigEditor: React.FC<Props> = props => {
   const { jsonData, secureJsonFields } = options;
   const secureJsonData = (options.secureJsonData || {}) as MySecureJsonData;
 
+  const onValueChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const jsonData = {
+      ...options.jsonData,
+      promValue: parseInt(event.target.value, 10),
+    };
+    onOptionsChange({ ...options, jsonData });
+  };
+
   const onPathChange = (event: ChangeEvent<HTMLInputElement>) => {
     const jsonData = {
       ...options.jsonData,
@@ -53,6 +61,16 @@ export const ConfigEditor: React.FC<Props> = props => {
 
   return (
     <div className="gf-form-group">
+      <div className="gf-form">
+        <FormField
+          label="Path"
+          labelWidth={6}
+          inputWidth={20}
+          onChange={onValueChange}
+          value={jsonData.promValue || 10}
+          placeholder="Sample value in prometheus"
+        />
+      </div>
       <div className="gf-form">
         <FormField
           label="Path"

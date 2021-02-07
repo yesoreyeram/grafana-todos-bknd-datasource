@@ -33,6 +33,7 @@ export const defaultQuery: Partial<MyQuery> = {
 };
 
 export interface MyDataSourceOptions extends DataSourceJsonData {
+  promValue: number;
   path?: string;
   defaultJSONURL?: string;
 }

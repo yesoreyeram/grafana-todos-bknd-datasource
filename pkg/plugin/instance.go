@@ -9,6 +9,7 @@ import (
 )
 
 type instanceConfig struct {
+	PromValue      int    `json:"promValue"`
 	Path           string `json:"path"`
 	DefaultJSONURL string `json:"defaultJSONURL"`
 }
