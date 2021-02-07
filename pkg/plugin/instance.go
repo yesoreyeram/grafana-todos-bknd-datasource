@@ -18,7 +18,7 @@ type dsInstance struct {
 	httpClient *http.Client
 }
 
-func (ins *dsInstance) getInstanceConfig(req *backend.QueryDataRequest) (config *instanceConfig, err error) {
+func getInstanceConfig(req *backend.QueryDataRequest) (config *instanceConfig, err error) {
 	err = json.Unmarshal(req.PluginContext.DataSourceInstanceSettings.JSONData, &config)
 	if err != nil {
 		return nil, err

@@ -35,7 +35,7 @@ func NewDataSource(mux *http.ServeMux) (ds *TodosDataSource) {
 		Logger:          loggerInstance,
 		InstanceManager: datasource.NewInstanceManager(newDataSourceInstance),
 	}
-	handleRoutes(mux)
+	ds.handleRoutes(mux)
 	return ds
 }
 
@@ -55,7 +55,7 @@ func (td *TodosDataSource) QueryData(ctx context.Context, req *backend.QueryData
 	if err != nil {
 		return response, err
 	}
-	config, err := instance.getInstanceConfig(req)
+	config, err := getInstanceConfig(req)
 	if err != nil {
 		return response, err
 	}
