@@ -26,6 +26,10 @@ var (
 		},
 		[]string{"entityType"},
 	)
+	promRandom = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: fmt.Sprintf("%s_randmom", appPrefix),
+		Help: "Random",
+	})
 )
 
 func handlePing(rw http.ResponseWriter, req *http.Request) {
@@ -50,5 +54,6 @@ func (td *TodosDataSource) handleRoutes(mux *http.ServeMux) {
 
 	promMetricsRegistry.MustRegister(promRequestsTotal)
 	promMetricsRegistry.MustRegister(promQueriesTotal)
+	promMetricsRegistry.MustRegister(promRandom)
 	mux.Handle("/todos/metrics", promhttp.HandlerFor(promMetricsRegistry, promhttp.HandlerOpts{}))
 }
