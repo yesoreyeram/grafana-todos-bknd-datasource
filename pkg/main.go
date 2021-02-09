@@ -1,9 +1,9 @@
 package main
 
 import (
-	"net/http"
 	"os"
 
+	"github.com/gorilla/mux"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/datasource"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/resource/httpadapter"
@@ -14,7 +14,7 @@ func main() {
 
 	backend.SetupPluginEnvironment("yesoreyeram-todosbknd-datasource")
 
-	mux := http.NewServeMux()
+	mux := mux.NewRouter()
 	httpResourceHandler := httpadapter.New(mux)
 	ds := plugin.NewDataSource(mux)
 

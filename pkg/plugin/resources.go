@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gorilla/mux"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/resource/httpadapter"
 	"github.com/prometheus/client_golang/prometheus"
@@ -61,7 +62,7 @@ func handlePing(rw http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func (td *TodosDataSource) handleRoutes(mux *http.ServeMux) {
+func (td *TodosDataSource) handleRoutes(mux *mux.Router) {
 	mux.HandleFunc("/ping", handlePing)
 	mux.Handle("/metrics", promhttp.Handler())
 	mux.Handle("/todos/metrics", promhttp.HandlerFor(promMetricsRegistry, promhttp.HandlerOpts{}))
