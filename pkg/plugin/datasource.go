@@ -3,8 +3,7 @@ package plugin
 import (
 	"context"
 	"encoding/json"
-
-	"github.com/gorilla/mux"
+	"net/http"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/datasource"
@@ -29,7 +28,7 @@ type TodosDataSource struct {
 }
 
 // NewDataSource return instance of new DataSource
-func NewDataSource(mux *mux.Router) (ds *TodosDataSource) {
+func NewDataSource(mux *http.ServeMux) (ds *TodosDataSource) {
 	loggerInstance := log.New()
 	ds = &TodosDataSource{
 		Logger:          loggerInstance,
