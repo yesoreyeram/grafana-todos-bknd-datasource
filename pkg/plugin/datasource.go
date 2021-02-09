@@ -3,7 +3,6 @@ package plugin
 import (
 	"context"
 	"encoding/json"
-	"math/rand"
 	"net/http"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
@@ -51,7 +50,6 @@ func (td *TodosDataSource) CheckHealth(ctx context.Context, req *backend.CheckHe
 // QueryData return results Grafana format
 func (td *TodosDataSource) QueryData(ctx context.Context, req *backend.QueryDataRequest) (*backend.QueryDataResponse, error) {
 	promRequestsTotal.Inc()
-	promRandom.Set(float64(rand.Intn(100)) * 0.01)
 	response := backend.NewQueryDataResponse()
 	instance, err := getInstance(td.InstanceManager, req.PluginContext)
 	if err != nil {

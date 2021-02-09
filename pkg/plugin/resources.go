@@ -3,7 +3,9 @@ package plugin
 import (
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"net/http"
+	"time"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/resource/httpadapter"
@@ -32,28 +34,35 @@ var (
 	})
 )
 
+func init() {
+	promMetricsRegistry.MustRegister(promRequestsTotal)
+	promMetricsRegistry.MustRegister(promQueriesTotal)
+	promMetricsRegistry.MustRegister(promRandom)
+	s1 := rand.NewSource(time.Now().UnixNano())
+	go func() {
+		for {
+			promRandom.Set(float64(rand.New(s1).Intn(100)) * 0.01)
+			time.Sleep(time.Second * 2)
+		}
+	}()
+}
+
 func handlePing(rw http.ResponseWriter, req *http.Request) {
-	ctx := req.Context()
-	ctxt := httpadapter.PluginConfigFromContext(ctx)
-	if ctxt.DataSourceInstanceSettings != nil {
-		backend.Logger.Warn("Received instance resource call", "url", req.URL.String(), "method", req.Method, "pluginid", ctxt.PluginID)
-		backend.Logger.Warn(string(ctxt.DataSourceInstanceSettings.JSONData))
+	requestContenct := req.Context()
+	pluginContext := httpadapter.PluginConfigFromContext(requestContenct)
+	if pluginContext.DataSourceInstanceSettings != nil {
+		backend.Logger.Warn("Received instance resource call", "url", req.URL.String(), "method", req.Method, "pluginid", pluginContext.PluginID, "instanceID", pluginContext.DataSourceInstanceSettings.ID, "instanceName", pluginContext.DataSourceInstanceSettings.Name)
 		config := &instanceConfig{}
-		json.Unmarshal(ctxt.DataSourceInstanceSettings.JSONData, &config)
+		json.Unmarshal(pluginContext.DataSourceInstanceSettings.JSONData, &config)
 		fmt.Fprintf(rw, "pong "+fmt.Sprint(config.PromValue)+"\n")
 	} else {
-		backend.Logger.Warn("Received plugin resource call", "url", req.URL.String(), "method", req.Method, "pluginid", ctxt.PluginID)
+		backend.Logger.Warn("Received plugin resource call", "url", req.URL.String(), "method", req.Method, "pluginid", pluginContext.PluginID)
 		fmt.Fprintf(rw, "pong\n")
 	}
 }
 
 func (td *TodosDataSource) handleRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/ping", handlePing)
-
 	mux.Handle("/metrics", promhttp.Handler())
-
-	promMetricsRegistry.MustRegister(promRequestsTotal)
-	promMetricsRegistry.MustRegister(promQueriesTotal)
-	promMetricsRegistry.MustRegister(promRandom)
 	mux.Handle("/todos/metrics", promhttp.HandlerFor(promMetricsRegistry, promhttp.HandlerOpts{}))
 }
