@@ -11,6 +11,13 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 )
 
+const (
+	entityTypeDummy           = "dummy"
+	entityTypeTodos           = "todos"
+	entityTypeJSON            = "json"
+	entityTypeJsonplaceholder = "jsonplaceholder"
+)
+
 type queryModel struct {
 	EntityType            string  `json:"entityType"`
 	Constant              float64 `json:"constant"`
@@ -73,7 +80,7 @@ func (td *TodosDataSource) query(ctx context.Context, query backend.DataQuery, i
 		return response
 	}
 	switch qm.EntityType {
-	case "dummy":
+	case entityTypeDummy:
 		dummyDatasource := &dummyDatasource{}
 		dataFrameDummy, err := dummyDatasource.Query(int(qm.Constant), qm.QueryText, query.RefID)
 		if err != nil {
@@ -81,7 +88,7 @@ func (td *TodosDataSource) query(ctx context.Context, query backend.DataQuery, i
 			return response
 		}
 		response.Frames = append(response.Frames, &dataFrameDummy)
-	case "todos":
+	case entityTypeTodos:
 		todoDatasource := &todoDatasource{}
 		dataFrameTodos, err := todoDatasource.Query(qm.NumberOfTodos, qm.HideFinishedTodos, instance, query.RefID)
 		if err != nil {
@@ -89,7 +96,7 @@ func (td *TodosDataSource) query(ctx context.Context, query backend.DataQuery, i
 			return response
 		}
 		response.Frames = append(response.Frames, &dataFrameTodos)
-	case "jsonplaceholder":
+	case entityTypeJsonplaceholder:
 		jsonPlaceholderDatasource := jsonPlaceholderDatasource{}
 		dataFrameJSONPlaceholders, err := jsonPlaceholderDatasource.Query(qm.JSONPlaceholderEntity, instance, query.RefID)
 		if err != nil {
@@ -97,7 +104,7 @@ func (td *TodosDataSource) query(ctx context.Context, query backend.DataQuery, i
 			return response
 		}
 		response.Frames = append(response.Frames, &dataFrameJSONPlaceholders)
-	case "json":
+	case entityTypeJSON:
 		jsonDatasource := jsonDatasource{}
 		dataFrameJSON, err := jsonDatasource.Query(qm.JSONURL, instance, query.RefID, config)
 		if err != nil {
