@@ -3,12 +3,15 @@ package plugin
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/datasource"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
+	"github.com/grafana/grafana-plugin-sdk-go/backend/resource/httpadapter"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 const (
@@ -16,6 +19,11 @@ const (
 	entityTypeTodos           = "todos"
 	entityTypeJSON            = "json"
 	entityTypeJsonplaceholder = "jsonplaceholder"
+)
+
+const (
+	resourcesURLPing    = "/ping"
+	resourcesURLMetrics = "/metrics"
 )
 
 type queryModel struct {
@@ -32,16 +40,20 @@ type queryModel struct {
 type TodosDataSource struct {
 	InstanceManager instancemgmt.InstanceManager
 	Logger          log.Logger
+	ResourceHandler backend.CallResourceHandler
 }
 
 // NewDataSource return instance of new DataSource
-func NewDataSource(mux *http.ServeMux) (ds *TodosDataSource) {
+func NewDataSource() (ds *TodosDataSource) {
 	loggerInstance := log.New()
 	ds = &TodosDataSource{
 		Logger:          loggerInstance,
 		InstanceManager: datasource.NewInstanceManager(newDataSourceInstance),
 	}
-	ds.handleRoutes(mux)
+	mux := http.NewServeMux()
+	mux.HandleFunc(resourcesURLPing, ds.handlePing)
+	mux.Handle(resourcesURLMetrics, ds.handleMetrics())
+	ds.ResourceHandler = httpadapter.New(mux)
 	return ds
 }
 
@@ -114,4 +126,28 @@ func (td *TodosDataSource) query(ctx context.Context, query backend.DataQuery, i
 		response.Frames = append(response.Frames, &dataFrameJSON)
 	}
 	return response
+}
+
+// /api/{plugins,datasources}/{id}/resources/ping
+func (td *TodosDataSource) handlePing(rw http.ResponseWriter, req *http.Request) {
+	fmt.Fprintf(rw, "pong\n")
+}
+
+// /api/{plugins,datasources}/{id}/resources/metrics
+func (td *TodosDataSource) handleMetrics() http.Handler {
+	return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		requestContenct := req.Context()
+		pluginContext := httpadapter.PluginConfigFromContext(requestContenct)
+		if pluginContext.DataSourceInstanceSettings != nil {
+			config := &instanceConfig{}
+			json.Unmarshal(pluginContext.DataSourceInstanceSettings.JSONData, &config)
+			registry := getInstanceRegistry(int64(pluginContext.DataSourceInstanceSettings.ID))
+			registry.collectMetrics(pluginContext, config)
+			han := promhttp.HandlerFor(registry.Registry, promhttp.HandlerOpts{})
+			han.ServeHTTP(rw, req)
+		} else {
+			han := promhttp.Handler()
+			han.ServeHTTP(rw, req)
+		}
+	})
 }

@@ -1,16 +1,12 @@
 package plugin
 
 import (
-	"encoding/json"
 	"fmt"
 	"math/rand"
-	"net/http"
 	"time"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
-	"github.com/grafana/grafana-plugin-sdk-go/backend/resource/httpadapter"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 const appPrefix = "todo"
@@ -89,22 +85,4 @@ func (registry *metricRegistryInstance) collectMetrics(pluginContext backend.Plu
 		"instanceName": pluginContext.DataSourceInstanceSettings.Name,
 		"instanceId":   fmt.Sprint(pluginContext.DataSourceInstanceSettings.ID),
 	}).Set(value1)
-}
-
-func promMetricsForInstance() http.Handler {
-	return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		requestContenct := req.Context()
-		pluginContext := httpadapter.PluginConfigFromContext(requestContenct)
-		if pluginContext.DataSourceInstanceSettings != nil {
-			config := &instanceConfig{}
-			json.Unmarshal(pluginContext.DataSourceInstanceSettings.JSONData, &config)
-			registry := getInstanceRegistry(int64(pluginContext.DataSourceInstanceSettings.ID))
-			registry.collectMetrics(pluginContext, config)
-			han := promhttp.HandlerFor(registry.Registry, promhttp.HandlerOpts{})
-			han.ServeHTTP(rw, req)
-		} else {
-			han := promhttp.Handler()
-			han.ServeHTTP(rw, req)
-		}
-	})
 }
